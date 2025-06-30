@@ -148,10 +148,7 @@ const Login = ({ navigation }) => {
                     value={mobile}
                     onChangeText={setMobile}
                     editable={!otpSent}
-<<<<<<< HEAD
                     placeholderTextColor={'gray'}
-=======
->>>>>>> refs/remotes/origin/main
                 />
                 {otpSent && (
                     <TouchableOpacity
@@ -179,10 +176,7 @@ const Login = ({ navigation }) => {
                         value={otp}
                         onChangeText={setOtp}
                         autoFocus={true}
-<<<<<<< HEAD
                         placeholderTextColor={'gray'}
-=======
->>>>>>> refs/remotes/origin/main
                     />
                     <TouchableOpacity onPress={handleResendOtp} disabled={!canResend}>
                         <Text style={[styles.resendText, !canResend && { color: '#aaa' }]}>
@@ -225,11 +219,7 @@ export default Login;
 
 const styles = StyleSheet.create({
     container: { flex: 1, padding: 24, justifyContent: 'center', backgroundColor: '#fff' },
-<<<<<<< HEAD
     title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 24, color: '#000' },
-=======
-    title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 24 },
->>>>>>> refs/remotes/origin/main
     input: {
         borderWidth: 1,
         borderColor: '#ccc',
@@ -237,10 +227,7 @@ const styles = StyleSheet.create({
         padding: 14,
         marginBottom: 14,
         fontSize: 16,
-<<<<<<< HEAD
         color:'#000',
-=======
->>>>>>> refs/remotes/origin/main
     },
     button: {
         backgroundColor: '#FFC107',

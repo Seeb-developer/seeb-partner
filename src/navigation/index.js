@@ -16,7 +16,6 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import CustomDrawer from '../component/CustomDrawer';
 import SplashScreen from '../screen/SplashScreen';
 import AccessDeniedScreen from '../screen/auth/AccessDeniedScreen';
-<<<<<<< HEAD
 import IDCardScreen from '../screen/account/IDCardScreen';
 import BankScreen from '../screen/account/BankScreen';
 import DocumentsScreen from '../screen/account/DocumentsScreen';
@@ -26,8 +25,6 @@ import TrainingScreen from '../screen/dashboard/TrainingScreen';
 import SettingsScreen from '../screen/dashboard/SettingsScreen';
 import SupportScreen from '../screen/dashboard/SupportScreen';
 import AcceptedTaskDetailsScreen from '../screen/dashboard/AcceptedTaskDetailsScreen';
-=======
->>>>>>> refs/remotes/origin/main
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -41,16 +38,12 @@ function BottomTabs() {
                     if (route.name === 'Dashboard') icon = 'home';
                     else if (route.name === 'Bookings') icon = 'clipboard';
                     else if (route.name === 'Notifications') icon = 'notifications';
-<<<<<<< HEAD
                     else if (route.name === 'Profile') icon = 'person';
-=======
->>>>>>> refs/remotes/origin/main
                     return <Ionicons name={icon} size={size} color={color} />;
                 },
                 headerShown: false,
                 tabBarActiveTintColor: '#FFC107',
                 tabBarInactiveTintColor: 'gray',
-<<<<<<< HEAD
                   tabBarStyle: {
                     backgroundColor: "#000",
                     height: Platform.OS === 'ios' ? 60 : 70,
@@ -65,13 +58,10 @@ function BottomTabs() {
             <Tab.Screen name="Earnings" component={BookingsScreen} />
             {/* <Tab.Screen name="Notifications" component={NotificationsScreen} /> */}
             <Tab.Screen name="Profile" component={ProfileScreen} />
-=======
-            })}
-        >
+           
             <Tab.Screen name="Dashboard" component={Home} />
             <Tab.Screen name="Bookings" component={BookingsScreen} />
             <Tab.Screen name="Notifications" component={NotificationsScreen} />
->>>>>>> refs/remotes/origin/main
         </Tab.Navigator>
     );
 }
@@ -82,7 +72,6 @@ function DrawerMenu() {
             drawerContent={(props) => <CustomDrawer {...props} />}
             screenOptions={{ headerShown: false }}
         >
-<<<<<<< HEAD
             <Drawer.Screen name="Home" component={Home} />
             <Drawer.Screen name="Earnings" component={EarningScreen} />
             <Drawer.Screen name="Rate Card" component={RateCardScreen} />
@@ -91,12 +80,10 @@ function DrawerMenu() {
             <Drawer.Screen name="Training" component={TrainingScreen} />
             <Drawer.Screen name="Settings" component={SettingsScreen} />
             <Drawer.Screen name="Support" component={SupportScreen} />
-=======
             <Drawer.Screen name="Home" component={BottomTabs} />
             <Drawer.Screen name="Earnings" component={BottomTabs} />
             <Drawer.Screen name="Rate Card" component={BottomTabs} />
             <Drawer.Screen name="Profile" component={ProfileScreen} />
->>>>>>> refs/remotes/origin/main
         </Drawer.Navigator>
     );
 }
@@ -112,17 +99,14 @@ const NavigationStack = () => {
                 <Stack.Screen name="Login" component={Login} />
                 <Stack.Screen name="AccessDeniedScreen" component={AccessDeniedScreen} />
                 {/* <Stack.Screen name="Dashboard" component={Home} /> */}
-<<<<<<< HEAD
                 {/* <Stack.Screen name="Profile" component={ProfileScreen} /> */}
                 <Stack.Screen name="BankScreen" component={BankScreen} />
                 <Stack.Screen name="DocumentsScreen" component={DocumentsScreen} />
                 <Stack.Screen name="IDCardScreen" component={IDCardScreen} />
                 <Stack.Screen name="DashboardStack" component={DrawerMenu} />
                 <Stack.Screen name="AcceptedTaskDetailsScreen" component={AcceptedTaskDetailsScreen} />
-=======
                 <Stack.Screen name="Profile" component={ProfileScreen} />
                 <Stack.Screen name="DashboardStack" component={DrawerMenu} />
->>>>>>> refs/remotes/origin/main
             </Stack.Navigator>
         </NavigationContainer>
     )

@@ -1,5 +1,4 @@
 import React from 'react';
-<<<<<<< HEAD
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -69,20 +68,10 @@ const getStatusStyle = (status) => {
       return { color: '#555' };
   }
 };
-=======
-import { View, Text, StyleSheet } from 'react-native';
-
-const BookingsScreen = () => (
-  <View style={styles.container}>
-    <Text style={styles.text}>Bookings Screen</Text>
-  </View>
-);
->>>>>>> refs/remotes/origin/main
 
 export default BookingsScreen;
 
 const styles = StyleSheet.create({
-<<<<<<< HEAD
   container: {
     flex: 1,
     backgroundColor: '#f8faff',
@@ -129,8 +118,4 @@ const styles = StyleSheet.create({
     marginTop: 8,
     color: '#999',
   },
-=======
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  text: { fontSize: 20 },
->>>>>>> refs/remotes/origin/main
 });

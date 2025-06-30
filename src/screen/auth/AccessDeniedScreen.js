@@ -23,13 +23,8 @@ const AccessDeniedScreen = ({ route, navigation }) => {
 
 const styles = StyleSheet.create({
     container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-<<<<<<< HEAD
     title: { fontSize: 24, fontWeight: 'bold', marginBottom: 12, color: '#000' },
     message: { fontSize: 16, marginBottom: 6, color:'#000' },
-=======
-    title: { fontSize: 24, fontWeight: 'bold', marginBottom: 12 },
-    message: { fontSize: 16, marginBottom: 6 },
->>>>>>> refs/remotes/origin/main
     subtext: { fontSize: 14, color: '#666', marginBottom: 20, textAlign: 'center' },
     button: {
         backgroundColor: '#087f5b',

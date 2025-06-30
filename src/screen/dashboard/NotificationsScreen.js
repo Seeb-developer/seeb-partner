@@ -1,5 +1,4 @@
 import React from 'react';
-<<<<<<< HEAD
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Navbar from '../../component/Navbar';
@@ -50,20 +49,10 @@ const NotificationsScreen = ({ navigation }) => {
     </View>
   );
 };
-=======
-import { View, Text, StyleSheet } from 'react-native';
-
-const NotificationsScreen = () => (
-    <View style={styles.container}>
-        <Text style={styles.text}>Notifications Screen</Text>
-    </View>
-);
->>>>>>> refs/remotes/origin/main
 
 export default NotificationsScreen;
 
 const styles = StyleSheet.create({
-<<<<<<< HEAD
   container: {
     backgroundColor: '#f8faff',
     padding: 16,
@@ -118,8 +107,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#999',
   },
-=======
-    container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    text: { fontSize: 20 },
->>>>>>> refs/remotes/origin/main
 });
