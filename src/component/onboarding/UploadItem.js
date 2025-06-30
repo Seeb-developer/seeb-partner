@@ -26,7 +26,6 @@ const UploadItem = ({ label, value, onPick, info, fieldKey }) => {
         Alert.alert('Upload Document', '', [
             {
                 text: 'Camera',
-<<<<<<< HEAD
                 onPress: async() => {
                     try {
                         const config = aspectMap[fieldKey] || { width: 800, height: 600 };
@@ -42,11 +41,6 @@ const UploadItem = ({ label, value, onPick, info, fieldKey }) => {
                     } catch (err) {
                         console.log('Camera cancel or error:', err);
                     }
-=======
-                onPress: () => {
-                    setCameraVisible(true);
-                    // const aspect = aspectMap[fieldKey];
->>>>>>> refs/remotes/origin/main
                 },
             },
             {

@@ -3,11 +3,7 @@ import {
   View, Text, StyleSheet, Dimensions, TouchableOpacity,
   Modal, SafeAreaView, Image, Alert
 } from 'react-native';
-<<<<<<< HEAD
 // import { Camera, useCameraDevice } from 'react-native-vision-camera';
-=======
-import { Camera, useCameraDevice } from 'react-native-vision-camera';
->>>>>>> refs/remotes/origin/main
 import ImageCropPicker from 'react-native-image-crop-picker';
 // import TextRecognition from 'react-native-text-recognition';
 import TextRecognition from '@react-native-ml-kit/text-recognition';
@@ -16,30 +12,17 @@ const { width } = Dimensions.get('window');
 
 const CameraModal = ({ visible, onClose, onCapture, circular = false }) => {
   const camera = useRef(null);
-<<<<<<< HEAD
   // const device = useCameraDevice(circular ? 'front' : 'back'); 
-=======
-  const device = useCameraDevice(circular ? 'front' : 'back');
->>>>>>> refs/remotes/origin/main
   const [permission, setPermission] = useState();
   const [previewUri, setPreviewUri] = useState(null);
   const [ocrText, setOcrText] = useState([]);
 
-<<<<<<< HEAD
   // useEffect(() => {
   //   (async () => {
   //     const status = await Camera.requestCameraPermission();
   //     setPermission(status);
   //   })();
   // }, []);
-=======
-  useEffect(() => {
-    (async () => {
-      const status = await Camera.requestCameraPermission();
-      setPermission(status);
-    })();
-  }, []);
->>>>>>> refs/remotes/origin/main
 
   const handleTakePhoto = async () => {
     if (!camera.current) return;

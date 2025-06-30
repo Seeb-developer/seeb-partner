@@ -35,12 +35,14 @@ local.properties
 !debug.keystore
 .kotlin/
 
+
 # node.js
 #
 node_modules/
 npm-debug.log
 yarn-error.log
 
+package-lock.json
 # fastlane
 #
 # It is recommended to not store the screenshots in the git repo. Instead, use fastlane to re-generate the
@@ -63,6 +65,7 @@ yarn-error.log
 # Add this to your .gitignore
 android/app/release/*.apk
 android/app/release/*.aab
+android/seebpartner.jks
 
 
 # Temporary files created by Metro to check the health of the file watcher
