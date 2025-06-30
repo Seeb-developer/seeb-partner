@@ -1,0 +1,497 @@
+import React, { useEffect, useState } from 'react';
+import {
+<<<<<<< HEAD
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+=======
+    View,
+    Text,
+    StyleSheet,
+    ScrollView,
+    TouchableOpacity,
+>>>>>>> refs/remotes/origin/main
+} from 'react-native';
+import { BarChart } from 'react-native-chart-kit';
+import { Dimensions } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+<<<<<<< HEAD
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import DashboardAssignedTask from '../../component/DashboardAssignedTask';
+=======
+>>>>>>> refs/remotes/origin/main
+
+const screenWidth = Dimensions.get('window').width;
+
+const Home = ({ navigation }) => {
+<<<<<<< HEAD
+  const [name, setName] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPartner = async () => {
+      try {
+        const json = await AsyncStorage.getItem('partner');
+        const { name } = JSON.parse(json);
+        setName(name);
+      } catch (err) {
+        console.log('Error fetching profile:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPartner();
+  }, []);
+
+  const [dashboardData, setDashboardData] = useState({
+    earnings: 12000,
+    totalProjects: 15,
+    completedProjects: 10,
+    inProgressProjects: 5,
+  });
+
+  const chartConfig = {
+    backgroundGradientFrom: '#fff',
+    backgroundGradientTo: '#fff',
+    decimalPlaces: 0,
+    color: (opacity = 1) => `rgba(0, 102, 204, ${opacity})`,
+    labelColor: () => '#333',
+    propsForBackgroundLines: {
+      stroke: '#e0e0e0',
+    },
+  };
+
+  const earningsData = {
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+    datasets: [
+      {
+        data: [2000, 2500, 1800, 3000, 2200, 2700, 3200],
+        color: (opacity = 1) => `rgba(0, 102, 204, ${opacity})`,
+        strokeWidth: 2,
+      },
+    ],
+  };
+
+  const sampleTask = {
+    booking_id: 1234,
+    service_name: 'False Ceiling Installation',
+    slot_date: '2025-06-29',
+    slot_time: '10:00 AM',
+    status: 'assigned',
+    amount: 5500,
+    description: 'Install gypsum ceiling in living room, 12x15 ft.',
+    customer: {
+      name: 'Rahul Mehta',
+      mobile: '9876543210',
+      address: '12/3, MG Road, Pune, Maharashtra',
+    },
+  };
+  ;
+
+  const [assignedTask, setAssignedTask] = useState(sampleTask); // only 1 task now
+  const [acceptedTasks, setAcceptedTasks] = useState([]);
+
+  const handleAccept = () => {
+    setAcceptedTasks((prev) => [...prev, assignedTask]);
+    setAssignedTask(null); // remove from assigned
+  };
+  const handleReject = () => {
+    setAssignedTask(null);
+  };
+
+
+  return (
+    <View style={{ flex: 1 }}>
+      {/* Header */}
+      <View style={styles.headerRow}>
+        <TouchableOpacity onPress={() => navigation.openDrawer()}>
+          <Ionicons name="menu" size={38} color="#fff" />
+        </TouchableOpacity>
+        {/* <Text style={styles.headerTitle}>Dashboard</Text> */}
+        <Image source={require('../../assets/logo-main.png')} style={{ width: 168, height: 58 }} resizeMode='contain' />
+      </View>
+      <ScrollView style={styles.container}>
+
+        {/* Welcome */}
+        <Text style={styles.welcome}>Welcome, {name || 'Partner'} 👋</Text>
+
+        {assignedTask && (
+          <DashboardAssignedTask
+            task={assignedTask}
+            onAccept={handleAccept}
+            onReject={handleReject}
+          />
+        )}
+
+        {acceptedTasks.length > 0 && (
+          <View style={{ marginBottom: 24 }}>
+            <Text style={styles.sectionTitle}>Accepted Orders</Text>
+            {acceptedTasks.map((task) => (
+              <TouchableOpacity
+                key={task.booking_id}
+                onPress={() =>
+                  navigation.navigate('AcceptedTaskDetailsScreen', { task })
+                }
+                style={styles.acceptedCardWrapper}
+              >
+                <View style={styles.acceptedCard}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.serviceName}>{task.service_name}</Text>
+                    <Text style={styles.bookingInfo}>
+                      📅 {task.slot_date}   🕒 {task.slot_time}
+                    </Text>
+                  </View>
+                  <View style={styles.rightSection}>
+                    <Text style={styles.amount}>₹{task.amount}</Text>
+                    <View style={styles.statusBadge}>
+                      <Text style={styles.statusText}>Accepted</Text>
+                    </View>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
+        {/* Earnings Card */}
+        <View style={styles.card}>
+          <Text style={styles.cardLabel}>Total Earnings</Text>
+          <Text style={styles.cardValue}>₹{dashboardData.earnings}</Text>
+        </View>
+
+        {/* Stats */}
+        <View style={styles.statsContainer}>
+          <StatBox label="Total Projects" value={dashboardData.totalProjects} />
+          <StatBox label="Completed" value={dashboardData.completedProjects} />
+          <StatBox label="In Progress" value={dashboardData.inProgressProjects} />
+        </View>
+
+        {/* Chart */}
+        <Text style={styles.sectionTitle}>Monthly Earnings</Text>
+        <BarChart
+          data={earningsData}
+          width={screenWidth - 40}
+          height={220}
+          chartConfig={chartConfig}
+          style={styles.chart}
+          fromZero
+        />
+      </ScrollView>
+    </View>
+  );
+};
+
+const StatBox = ({ label, value }) => (
+  <View style={styles.statBox}>
+    <Text style={styles.statLabel}>{label}</Text>
+    <Text style={styles.statValue}>{value}</Text>
+  </View>
+);
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f8faff',
+    padding: 20,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    // marginBottom: 20,
+    backgroundColor: "#000",
+    paddingVertical: 8,
+    paddingHorizontal: 10
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  welcome: {
+    fontSize: 18,
+    color: '#333',
+    marginBottom: 20,
+  },
+
+  acceptedCardWrapper: {
+    marginBottom: 12,
+    borderRadius: 14,
+    backgroundColor: '#FFF8E1',
+    borderLeftWidth: 5,
+    borderLeftColor: '#FF9800',
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
+    elevation: 3,
+  },
+
+  acceptedCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    padding: 16,
+  },
+
+  serviceName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#222',
+    marginBottom: 6,
+  },
+
+  bookingInfo: {
+    fontSize: 13,
+    color: '#666',
+  },
+
+  rightSection: {
+    alignItems: 'flex-end',
+  },
+
+  amount: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2E7D32',
+    marginBottom: 8,
+  },
+
+  statusBadge: {
+    backgroundColor: '#E0F7FA',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
+
+  statusText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#00796B',
+  },
+
+  card: {
+    backgroundColor: '#e3f2fd',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 20,
+  },
+  cardLabel: {
+    fontSize: 14,
+    color: '#555',
+  },
+  cardValue: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#003366',
+    marginTop: 6,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 30,
+    gap: 10,
+  },
+  statBox: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.03,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 2,
+  },
+  statLabel: {
+    fontSize: 13,
+    color: '#666',
+    marginBottom: 6,
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#003366',
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#003366',
+    marginBottom: 12,
+  },
+  chart: {
+    borderRadius: 12,
+  },
+});
+
+=======
+    const [dashboardData, setDashboardData] = useState({
+        name: 'Haseeb Khan',
+        earnings: 12000,
+        totalProjects: 15,
+        completedProjects: 10,
+        inProgressProjects: 5,
+    });
+
+    const chartConfig = {
+        backgroundGradientFrom: '#fff',
+        backgroundGradientTo: '#fff',
+        decimalPlaces: 0,
+        color: (opacity = 1) => `rgba(255, 193, 7, ${opacity})`,
+        labelColor: () => '#000',
+        propsForBackgroundLines: {
+            stroke: '#ccc',
+        },
+    };
+
+    const earningsData = {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+        datasets: [
+            {
+                data: [2000, 2500, 1800, 3000, 2200, 2700, 3200],
+                color: (opacity = 1) => `rgba(255, 193, 7, ${opacity})`, // Custom color for bars
+                strokeWidth: 2, // optional
+            },
+        ],
+    };
+
+    // Fetch data from API if needed in useEffect
+    // useEffect(() => { ... }, []);
+
+    return (
+        <ScrollView style={styles.container}>
+            <View style={styles.headerRow}>
+                <TouchableOpacity onPress={() => navigation.openDrawer()}>
+                    <Ionicons name="menu" size={28} color="#000" />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>Dashboard</Text>
+            </View>
+            <Text style={styles.welcome}>Welcome, {dashboardData.name}</Text>
+
+            <View style={styles.card}>
+                <Text style={styles.cardLabel}>Earnings</Text>
+                <Text style={styles.cardValue}>₹{dashboardData.earnings}</Text>
+            </View>
+
+            <View style={styles.statsContainer}>
+                <View style={styles.statBox}>
+                    <Text style={styles.statLabel}>Total Projects</Text>
+                    <Text style={styles.statValue}>{dashboardData.totalProjects}</Text>
+                </View>
+                <View style={styles.statBox}>
+                    <Text style={styles.statLabel}>Completed Projects</Text>
+                    <Text style={styles.statValue}>{dashboardData.completedProjects}</Text>
+                </View>
+                <View style={styles.statBox}>
+                    <Text style={styles.statLabel}>In Progress Projects</Text>
+                    <Text style={styles.statValue}>{dashboardData.inProgressProjects}</Text>
+                </View>
+            </View>
+            {/* 
+            <TouchableOpacity
+                style={styles.profileCard}
+                onPress={() => navigation.navigate('Profile')}
+            >
+                <Text style={styles.profileTitle}>View Profile</Text>
+                <Text style={styles.profileHint}>See full details</Text>
+            </TouchableOpacity> */}
+            <Text style={{ fontSize: 18, fontWeight: 'bold', marginTop: 30, marginBottom: 10 }}>
+                Monthly Earnings
+            </Text>
+
+            <BarChart
+                data={earningsData}
+                width={screenWidth - 40}
+                height={220}
+                chartConfig={chartConfig}
+                style={{ borderRadius: 12 }}
+                fromZero
+            />
+        </ScrollView>
+    );
+};
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#fff',
+        padding: 20,
+    },
+    welcome: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: '#000',
+        marginBottom: 20,
+    },
+    card: {
+        backgroundColor: '#FFC107',
+        borderRadius: 12,
+        padding: 20,
+        marginBottom: 20,
+    },
+    cardLabel: {
+        fontSize: 16,
+        color: '#000',
+    },
+    cardValue: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        color: '#000',
+        marginTop: 10,
+    },
+    statsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: 10,
+    },
+    statBox: {
+        flex: 1,
+        backgroundColor: '#f4f4f4',
+        padding: 16,
+        borderRadius: 10,
+        alignItems: 'center',
+    },
+    statLabel: {
+        color: '#444',
+        fontSize: 14,
+        marginBottom: 6,
+    },
+    statValue: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#000',
+    },
+    profileCard: {
+        backgroundColor: '#000',
+        padding: 16,
+        borderRadius: 10,
+        marginTop: 30,
+    },
+    profileTitle: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    profileHint: {
+        color: '#FFC107',
+        fontSize: 14,
+        marginTop: 4,
+    },
+    headerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        marginBottom: 20,
+      },
+      headerTitle: { fontSize: 22, fontWeight: 'bold' },
+      content: { fontSize: 16 },
+});
+
+
+>>>>>>> refs/remotes/origin/main
+export default Home;
