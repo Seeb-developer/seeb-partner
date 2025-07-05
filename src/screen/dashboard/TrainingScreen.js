@@ -14,7 +14,7 @@ const mockTrainingData = [
         id: '1',
         title: 'Introduction to SEEB Partner App',
         duration: '5 min',
-        status: 'Completed',
+        status: 'Pending',
     },
     {
         id: '2',
@@ -32,7 +32,7 @@ const mockTrainingData = [
 
 const TrainingScreen = ({ navigation }) => {
     const renderItem = ({ item }) => (
-        <TouchableOpacity style={styles.card}>
+        <TouchableOpacity style={styles.card} onPress={()=> navigation.navigate('ComingSoon')}>
             <View style={styles.cardContent}>
                 <Ionicons
                     name={item.status === 'Completed' ? 'checkmark-circle-outline' : 'play-circle-outline'}

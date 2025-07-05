@@ -5,12 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
-    View,
-    Text,
-    StyleSheet,
-    ScrollView,
-    TouchableOpacity,
+  Image
 } from 'react-native';
 import { BarChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';

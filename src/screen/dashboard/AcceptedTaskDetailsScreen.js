@@ -97,13 +97,14 @@ const AcceptedTaskDetailsScreen = ({ route, navigation }) => {
           onChangeText={setNotes}
           multiline
           style={styles.textArea}
+          placeholderTextColor="#222"
         />
 
-        <Text style={styles.sectionTitle}>Upload Photo</Text>
+        {/* <Text style={styles.sectionTitle}>Upload Photo</Text>
         <TouchableOpacity style={styles.uploadBtn} onPress={handlePhotoUpload}>
           <Ionicons name="cloud-upload-outline" size={20} color="#fff" />
           <Text style={styles.uploadBtnText}>Upload</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         {imageUri && <Image source={{ uri: imageUri }} style={styles.previewImage} />}
 
         <TouchableOpacity style={styles.statusBtn} onPress={handleStatusChange}>

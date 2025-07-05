@@ -15,7 +15,7 @@ const supportOptions = [
     {
         label: 'Call Support',
         icon: 'call-outline',
-        action: () => Linking.openURL('tel:+919876543210'),
+        action: () => Linking.openURL('tel:18005703133'),
     },
     {
         label: 'Email Support',
@@ -26,18 +26,18 @@ const supportOptions = [
     {
         label: 'WhatsApp Support',
         icon: 'logo-whatsapp',
-        action: () => Linking.openURL('https://wa.me/919876543210'),
+        action: () => Linking.openURL('https://wa.me/7709899729'),
     },
-    {
-        label: 'FAQs',
-        icon: 'help-circle-outline',
-        action: () => Alert.alert('Coming Soon', 'FAQs will be added shortly.'),
-    },
+    // {
+    //     label: 'FAQs',
+    //     icon: 'help-circle-outline',
+    //     action: () => Alert.alert('Coming Soon', 'FAQs will be added shortly.'),
+    // },
 ];
 
 const SupportScreen = ({ navigation }) => {
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, backgroundColor:'#fff' }}>
             <Navbar title="Support" onBack={() => navigation.goBack()} />
             <ScrollView contentContainerStyle={styles.container}>
                 <Text style={styles.heading}>We're here to help</Text>

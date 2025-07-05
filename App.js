@@ -15,6 +15,7 @@ import hotUpdate from 'react-native-ota-hot-update';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import DeviceInfo from 'react-native-device-info';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { OnboardingProvider } from './src/context/OnboardingContext';
 
 const App = () => {
 
@@ -77,7 +78,9 @@ const App = () => {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
-        <NavigationStack />
+        <OnboardingProvider>
+          <NavigationStack />
+        </OnboardingProvider>
 
         {/* Optional: Bottom Banner */}
         {showUpdateModal && (

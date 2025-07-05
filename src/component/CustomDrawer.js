@@ -10,17 +10,20 @@ import {
 import { DrawerContentScrollView } from '@react-navigation/drawer';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from '../utils/api';
 
 const ACCENT_COLOR = '#FF9800'; // Orange
 
 const CustomDrawer = ({ navigation, state }) => {
   const [name, setName] = useState('Haseeb Khan');
+  const [id, setId] = useState('')
 
   useEffect(() => {
     const fetchName = async () => {
       try {
         const json = await AsyncStorage.getItem('partner');
-        const { name } = JSON.parse(json);
+        const { name, id } = JSON.parse(json);
+        setId(id)
         setName(name);
       } catch (e) {
         console.log('Error:', e);
@@ -38,7 +41,7 @@ const CustomDrawer = ({ navigation, state }) => {
     // { label: 'Notification', icon: 'notifications-outline', screen: 'Notification' },
     { label: 'Training', icon: 'pulse-outline', screen: 'Training' },
     { label: 'Profile', icon: 'person-outline', screen: 'Profile' },
-    { label: 'Support', icon: 'help-circle-outline', screen: 'Support' },
+    // { label: 'Support', icon: 'help-circle-outline', screen: 'Support' },
     { label: 'Settings', icon: 'settings-outline', screen: 'Settings' },
   ];
 
@@ -47,6 +50,8 @@ const CustomDrawer = ({ navigation, state }) => {
     await AsyncStorage.multiRemove(['token', 'onboarding_status', 'partner']);
     navigation.replace('Login');
   };
+  
+  const imageUrl = `${API_URL}partner/photo/${id}?t=${Date.now()}`;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -57,7 +62,7 @@ const CustomDrawer = ({ navigation, state }) => {
         <View style={styles.profileSection}>
           <View style={styles.avatarBox}>
             <Image
-              source={{ uri: 'https://randomuser.me/api/portraits/men/14.jpg' }}
+              source={{ uri: imageUrl }}
               style={styles.avatar}
             />
           </View>

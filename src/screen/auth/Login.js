@@ -6,6 +6,10 @@ import {
     TouchableOpacity,
     StyleSheet,
     ActivityIndicator,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    Alert,
 } from 'react-native';
 import { post } from '../../utils/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -14,13 +18,23 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const Login = ({ navigation }) => {
     const [mobile, setMobile] = useState('');
-    const [otp, setOtp] = useState('');
+    const [otp, setOtp] = useState(['', '', '', '']);
+    // const [otp, setOtp] = useState('');
     const [otpSent, setOtpSent] = useState(false);
     const [loading, setLoading] = useState(false);
     const otpInputRef = useRef(null); // ✅ Ref for auto-focus
     const [resendTimer, setResendTimer] = useState(30);
     const [canResend, setCanResend] = useState(false);
 
+    const [focusedIndex, setFocusedIndex] = useState(null);
+    
+    const [mobileError, setMobileError] = useState('');
+    const [otpError, setOtpError] = useState('');
+
+
+    const inputsRef = useRef([]);
+    const hiddenInputRef = useRef(null);
+    const prevOtpRef = useRef('');
 
     const handleSendOtp = async () => {
         if (mobile.length !== 10) {
@@ -62,6 +76,7 @@ const Login = ({ navigation }) => {
     };
 
     const handleVerifyOtp = async () => {
+        // Alert.alert(typeof otp)
         if (!otp || otp.length < 4) {
             Toast.show({ type: 'error', text1: 'Invalid OTP' });
             return;
@@ -70,7 +85,7 @@ const Login = ({ navigation }) => {
         try {
             setLoading(true);
 
-            const res = await post('/login', { mobile, otp });
+            const res = await post('/login', { mobile, otp: otp.join('') });
             console.log('Login response:', res.data);
 
             // Save token
@@ -135,83 +150,191 @@ const Login = ({ navigation }) => {
         }
     };
 
+    const handleChange = (text, index) => {
+        const updatedOtp = [...otp];
+        updatedOtp[index] = text;
+        setOtp(updatedOtp);
+
+        if (text && index < 3) {
+            inputsRef.current[index + 1].focus();
+        }
+
+        // if pasted full OTP
+        if (text.length === 4) {
+            const chars = text.split('');
+            setOtp(chars);
+            chars.forEach((c, i) => {
+                inputsRef.current[i].setNativeProps({ text: c });
+            });
+        }
+    };
+
+    const handleKeyPress = (e, index) => {
+        if (e.nativeEvent.key === 'Backspace') {
+            if (otp[index]) {
+                // Just clear current input
+                const updatedOtp = [...otp];
+                updatedOtp[index] = '';
+                setOtp(updatedOtp);
+            } else if (index > 0) {
+                // Move focus to previous input and clear it
+                inputsRef.current[index - 1].focus();
+                const updatedOtp = [...otp];
+                updatedOtp[index - 1] = '';
+                setOtp(updatedOtp);
+            }
+        }
+    };
+
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Login with OTP</Text>
-            <View>
-                <TextInput
-                    placeholder="Enter Mobile Number"
-                    style={[styles.input]}
-                    keyboardType="phone-pad"
-                    maxLength={10}
-                    value={mobile}
-                    onChangeText={setMobile}
-                    editable={!otpSent}
-                    placeholderTextColor={'gray'}
-                />
+        <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={{ flex: 1 }}
+        >
+            <View style={styles.container}>
+                <View style={{ alignItems: 'center' }}>
+                    <Image source={require('../../assets/playstore.png')} style={{ width: 150, height: 150, marginBottom: 30, borderRadius: 20 }} resizeMode='contain' />
+                </View>
+                <Text style={styles.title}>Login with OTP</Text>
+                <View>
+                    <View style={[styles.inputGroup, focusedIndex == 'number' && { borderColor: '#96f1a7' }]}>
+                        <View style={styles.prefixBox}>
+                            <Text style={styles.prefixText}>+91</Text>
+                        </View>
+                        <TextInput
+                            style={styles.inputField}
+                            placeholder="Enter Mobile Number"
+                            placeholderTextColor="#aaa"
+                            keyboardType="phone-pad"
+                            maxLength={10}
+                            value={mobile}
+                            onChangeText={setMobile}
+                            onFocus={() => setFocusedIndex('number')}
+                            onBlur={() => setFocusedIndex(null)}
+                        />
+                    </View>
+
+                    {otpSent && (
+                        <TouchableOpacity
+                            onPress={() => {
+                                setOtpSent(false);
+                                setOtp('');
+                                setCanResend(false);
+                                setResendTimer(0);
+                            }}
+                            style={styles.editIcon}
+                        >
+                            <MaterialIcons name="edit" size={24} color="#000" />
+                        </TouchableOpacity>
+                    )}
+                </View>
+
                 {otpSent && (
-                    <TouchableOpacity
-                        onPress={() => {
-                            setOtpSent(false);
-                            setOtp('');
-                            setCanResend(false);
-                            setResendTimer(0);
-                        }}
-                        style={styles.editIcon}
-                    >
-                        <MaterialIcons name="edit" size={24} color="#000" />
-                    </TouchableOpacity>
-                )}
-            </View>
+                    <>
+                        {/* <TextInput
+                            ref={otpInputRef}
+                            placeholder="Enter OTP"
+                            style={styles.input}
+                            keyboardType="number-pad"
+                            maxLength={6}
+                            value={otp}
+                            onChangeText={setOtp}
+                            autoFocus={true}
+                            placeholderTextColor={'gray'}
+                        /> */}
+                        <TextInput
+                            ref={hiddenInputRef}
+                            style={{ position: 'absolute', height: 0, width: 0, opacity: 0 }}
+                            value={otp.join('')}
+                            onChangeText={(text) => {
+                                const chars = text.slice(0, 4).split('');
+                                const prev = prevOtpRef.current.split('');
+                                prevOtpRef.current = text;
 
-            {otpSent && (
-                <>
-                    <TextInput
-                        ref={otpInputRef}
-                        placeholder="Enter OTP"
-                        style={styles.input}
-                        keyboardType="number-pad"
-                        maxLength={6}
-                        value={otp}
-                        onChangeText={setOtp}
-                        autoFocus={true}
-                        placeholderTextColor={'gray'}
-                    />
-                    <TouchableOpacity onPress={handleResendOtp} disabled={!canResend}>
-                        <Text style={[styles.resendText, !canResend && { color: '#aaa' }]}>
-                            {canResend ? 'Resend OTP' : `Resend in ${resendTimer}s`}
+                                setOtp((prevOtp) => {
+                                    const updated = [...prevOtp];
+
+                                    // Handle paste or input
+                                    chars.forEach((c, i) => {
+                                        updated[i] = c;
+                                    });
+
+                                    // Handle backspace (when length shrinks)
+                                    if (text.length < prev.length) {
+                                        updated[text.length] = '';
+                                        setFocusedIndex(text.length > 0 ? text.length - 1 : 0);
+                                    } else {
+                                        setFocusedIndex(chars.length - 1);
+                                    }
+
+                                    return updated;
+                                });
+
+                                // Blur when 4 digits entered
+                                if (chars.length === 4) {
+                                    hiddenInputRef.current?.blur();
+                                }
+                            }}
+                            keyboardType="number-pad"
+                            textContentType="oneTimeCode"
+                            autoFocus={true}
+                            onBlur={() => setFocusedIndex(null)}
+                        />
+                        <View style={styles.otpRow}>
+                            {otp?.map((digit, index) => (
+                                <TextInput
+                                    key={index}
+                                    ref={(ref) => (inputsRef.current[index] = ref)}
+                                    value={digit}
+                                    onChangeText={(text) => handleChange(text, index)}
+                                    onKeyPress={(e) => handleKeyPress(e, index)}
+                                    keyboardType="number-pad"
+                                    maxLength={1}
+                                    style={[styles.otpBox, focusedIndex === index && { borderColor: '#96f1a7' },]}
+                                    placeholder="•"
+                                    placeholderTextColor="#bbb"
+                                    onFocus={() => setFocusedIndex(index)}
+                                    onBlur={() => setFocusedIndex(null)}
+                                />
+                            ))}
+                        </View>
+                        <TouchableOpacity onPress={handleResendOtp} disabled={!canResend}>
+                            <Text style={[styles.resendText, !canResend && { color: '#aaa' }]}>
+                                {canResend ? 'Resend OTP' : `Resend in ${resendTimer}s`}
+                            </Text>
+                        </TouchableOpacity>
+                    </>
+                )}
+
+                <TouchableOpacity
+                    style={[styles.button, loading && { opacity: 0.7 }]}
+                    onPress={otpSent ? handleVerifyOtp : handleSendOtp}
+                    disabled={loading}
+                >
+                    {loading ? (
+                        <ActivityIndicator size="small" color="#000" />
+                    ) : (
+                        <Text style={styles.buttonText}>
+                            {otpSent ? 'Verify OTP' : 'Send OTP'}
                         </Text>
-                    </TouchableOpacity>
-                </>
-            )}
+                    )}
+                </TouchableOpacity>
 
-            <TouchableOpacity
-                style={[styles.button, loading && { opacity: 0.7 }]}
-                onPress={otpSent ? handleVerifyOtp : handleSendOtp}
-                disabled={loading}
-            >
-                {loading ? (
-                    <ActivityIndicator size="small" color="#000" />
-                ) : (
-                    <Text style={styles.buttonText}>
-                        {otpSent ? 'Verify OTP' : 'Send OTP'}
+                {/* <TouchableOpacity onPress={() => navigation.navigate('OnboardingForm')}> */}
+                <TouchableOpacity onPress={() => navigation.navigate('Step1_Mobile')}>
+                    <Text style={styles.registerText}>
+                        New to Seeb Partner? <Text style={styles.registerLink}>Register Now</Text>
                     </Text>
-                )}
-            </TouchableOpacity>
+                </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => navigation.navigate('OnboardingForm')}>
-                <Text style={styles.registerText}>
-                    New to Seeb Partner? <Text style={styles.registerLink}>Register Now</Text>
+                <Text style={styles.privacy}>
+                    By continuing, you agree to our{' '}
+                    <Text style={styles.link}>Terms</Text> &{' '}
+                    <Text style={styles.link}>Privacy Policy</Text>.
                 </Text>
-            </TouchableOpacity>
-
-            <Text style={styles.privacy}>
-                By continuing, you agree to our{' '}
-                <Text style={styles.link}>Terms</Text> &{' '}
-                <Text style={styles.link}>Privacy Policy</Text>.
-            </Text>
-        </View>
+            </View>
+        </KeyboardAvoidingView>
     );
 };
 
@@ -220,14 +343,47 @@ export default Login;
 const styles = StyleSheet.create({
     container: { flex: 1, padding: 24, justifyContent: 'center', backgroundColor: '#fff' },
     title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 24, color: '#000' },
-    input: {
+    inputGroup: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F9F9F9',
+        borderWidth: 1,
+        borderColor: '#DADADA',
+        borderRadius: 8,
+        marginBottom: 24,
+    },
+    prefixBox: {
+        paddingHorizontal: 14,
+        justifyContent: 'center',
+        borderRightWidth: 1,
+        borderRightColor: '#DADADA',
+    },
+    prefixText: {
+        fontSize: 16,
+        color: '#333',
+    },
+    inputField: {
+        flex: 1,
+        paddingHorizontal: 14,
+        paddingVertical: 14,
+        fontSize: 16,
+        color: '#000',
+    },
+    otpRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 24,
+    },
+    otpBox: {
+        width: 55,
+        height: 55,
         borderWidth: 1,
         borderColor: '#ccc',
         borderRadius: 10,
-        padding: 14,
-        marginBottom: 14,
-        fontSize: 16,
-        color:'#000',
+        textAlign: 'center',
+        fontSize: 20,
+        backgroundColor: '#F9F9F9',
+        color: '#333',
     },
     button: {
         backgroundColor: '#FFC107',

@@ -226,35 +226,35 @@ const OnboardingForm = ({ navigation }) => {
   const formatPAN = (val) => val.toUpperCase();
 
   const isNextDisabled = () => {
-    if (step === 0) {
-      return !otpVerified;
-    }
-    if (step === 1) {
-      return !(
-        form.name &&
-        form.dob &&
-        isAdult(form.dob) &&
-        form.work &&
-        isValidAadhaar(form.aadhaar_no) &&
-        isValidPAN(form.pan_no)
-      );
-    }
-    if (step === 2) {
-      return !(
-        form.account_holder_name &&
-        form.bank_name &&
-        form.bank_branch &&
-        form.account_number &&
-        form.confirm_account_number &&
-        form.account_number.length >= 9 &&
-        form.confirm_account_number.length >= 9 &&
-        form.account_number === form.confirm_account_number &&
-        isValidIFSC(form.ifsc_code)
-      );
-    }
-    if (step === 3) {
-      return !(form.aadhar_front && form.aadhar_back && form.pan_card && form.address_proof && form.photo && form.bank_document);
-    }
+      if (step === 0) {
+        return !otpVerified;
+      }
+      if (step === 1) {
+        return !(
+          form.name &&
+          form.dob &&
+          isAdult(form.dob) &&
+          form.work &&
+          isValidAadhaar(form.aadhaar_no) &&
+          isValidPAN(form.pan_no)
+        );
+      }
+      if (step === 2) {
+        return !(
+          form.account_holder_name &&
+          form.bank_name &&
+          form.bank_branch &&
+          form.account_number &&
+          form.confirm_account_number &&
+          form.account_number.length >= 9 &&
+          form.confirm_account_number.length >= 9 &&
+          form.account_number === form.confirm_account_number &&
+          isValidIFSC(form.ifsc_code)
+        );
+      }
+      if (step === 3) {
+        return !(form.aadhar_front && form.aadhar_back && form.pan_card && form.address_proof && form.photo && form.bank_document);
+      }
     return false;
   };
 
@@ -352,72 +352,72 @@ const OnboardingForm = ({ navigation }) => {
 
 
 
-  // useEffect(() => {
-  //   (async () => {
-  //     try {
-  //       const savedForm = await AsyncStorage.getItem('onboarding_form');
-  //       const savedStep = await AsyncStorage.getItem('onboarding_step');
-  //       if (savedForm) setForm(JSON.parse(savedForm));
-  //       if (savedStep) setStep(Number(savedStep));
-  //     } catch (error) {
-  //       console.log('Failed to load onboarding data:', error);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   })();
+  useEffect(() => {
+    (async () => {
+      try {
+        const savedForm = await AsyncStorage.getItem('onboarding_form');
+        const savedStep = await AsyncStorage.getItem('onboarding_step');
+        if (savedForm) setForm(JSON.parse(savedForm));
+        if (savedStep) setStep(Number(savedStep));
+      } catch (error) {
+        console.log('Failed to load onboarding data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
 
-  // }, []);
+  }, []);
 
-  // useEffect(() => {
-  //   (async () => {
-  //     try {
-  //       // const savedStep = await AsyncStorage.getItem('onboarding_step');
-  //       const user = await AsyncStorage.getItem('partner');
-  //       const parsedUser = JSON.parse(user);
-  //       setPartnerId(parsedUser?.id);
-  //       const res = await get(`/onboarding-data/${parsedUser?.id}`);
-  //       const data = res?.data?.data;
+  useEffect(() => {
+    (async () => {
+      try {
+        // const savedStep = await AsyncStorage.getItem('onboarding_step');
+        const user = await AsyncStorage.getItem('partner');
+        const parsedUser = JSON.parse(user);
+        setPartnerId(parsedUser?.id);
+        const res = await get(`/onboarding-data/${parsedUser?.id}`);
+        const data = res?.data?.data;
 
-  //       const docMap = {};
-  //       data?.documents?.forEach(doc => {
-  //         docMap[doc.type] = 'https://backend.seeb.in/' + doc.file_path;
-  //       });
+        const docMap = {};
+        data?.documents?.forEach(doc => {
+          docMap[doc.type] = 'https://backend.seeb.in/' + doc.file_path;
+        });
 
-  //       const updatedForm = {
-  //         name: data.partner.name || '',
-  //         mobile: data.partner.mobile || '',
-  //         mobile_verified: data.partner.mobile_verified === '1',
-  //         otp: '',
-  //         dob: data.partner.dob || '',
-  //         work: data.partner.work || '',
-  //         labour_count: data.partner.labour_count || '',
-  //         area: data.partner.area || '',
-  //         service_areas: data.partner.service_areas || '',
-  //         aadhaar_no: data.partner.aadhaar_no || '',
-  //         pan_no: data.partner.pan_no || '',
-  //         aadhar_front: docMap.aadhar_front || '',
-  //         aadhar_back: docMap.aadhar_back || '',
-  //         pan_card: docMap.pan_card || '',
-  //         address_proof: docMap.address_proof || '',
-  //         photo: docMap.photo || '',
-  //         account_holder_name: data.bank_details.account_holder_name || '',
-  //         bank_name: data.bank_details.bank_name || '',
-  //         bank_branch: data.bank_details.bank_branch || '',
-  //         account_number: data.bank_details.account_number || '',
-  //         confirm_account_number: data.bank_details.account_number || '',
-  //         ifsc_code: data.bank_details.ifsc_code || '',
-  //         bank_document: "https://backend.seeb.in/" + data.bank_details.bank_document || '',
-  //       };
-  //       setOtpVerified(data.partner.mobile_verified ? true : false);
-  //       setForm(updatedForm);
-  //       // if (savedStep) setStep(Number(savedStep));
-  //     } catch (e) {
-  //       console.error('Error loading onboarding data:', e);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   })();
-  // }, []);
+        const updatedForm = {
+          name: data.partner.name || '',
+          mobile: data.partner.mobile || '',
+          mobile_verified: data.partner.mobile_verified === '1',
+          otp: '',
+          dob: data.partner.dob || '',
+          work: data.partner.work || '',
+          labour_count: data.partner.labour_count || '',
+          area: data.partner.area || '',
+          service_areas: data.partner.service_areas || '',
+          aadhaar_no: data.partner.aadhaar_no || '',
+          pan_no: data.partner.pan_no || '',
+          aadhar_front: docMap.aadhar_front || '',
+          aadhar_back: docMap.aadhar_back || '',
+          pan_card: docMap.pan_card || '',
+          address_proof: docMap.address_proof || '',
+          photo: docMap.photo || '',
+          account_holder_name: data.bank_details.account_holder_name || '',
+          bank_name: data.bank_details.bank_name || '',
+          bank_branch: data.bank_details.bank_branch || '',
+          account_number: data.bank_details.account_number || '',
+          confirm_account_number: data.bank_details.account_number || '',
+          ifsc_code: data.bank_details.ifsc_code || '',
+          bank_document: "https://backend.seeb.in/" + data.bank_details.bank_document || '',
+        };
+        setOtpVerified(data.partner.mobile_verified ? true : false);
+        setForm(updatedForm);
+        // if (savedStep) setStep(Number(savedStep));
+      } catch (e) {
+        console.error('Error loading onboarding data:', e);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, []);
 
 
   if (isLoading) {
@@ -820,6 +820,7 @@ const OnboardingForm = ({ navigation }) => {
                     </TouchableOpacity>
                   </View>
                   <View style={{ width: '45%' }} >
+                    {console.log(isNextDisabled)}
                     <TouchableOpacity style={[
                       styles.ctaButton,
                       { backgroundColor: isNextDisabled() ? '#ccc' : '#EFBF04' },

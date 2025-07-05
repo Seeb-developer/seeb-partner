@@ -25,6 +25,19 @@ import TrainingScreen from '../screen/dashboard/TrainingScreen';
 import SettingsScreen from '../screen/dashboard/SettingsScreen';
 import SupportScreen from '../screen/dashboard/SupportScreen';
 import AcceptedTaskDetailsScreen from '../screen/dashboard/AcceptedTaskDetailsScreen';
+import Step1MobileVerification from '../screen/onboarding/steps/Step1MobileVerification';
+import Step2PersonalInfo from '../screen/onboarding/steps/Step2PersonalInfo';
+import Step3BankDetails from '../screen/onboarding/steps/Step3BankDetails';
+import Step4DocumentUpload from '../screen/onboarding/steps/Step4DocumentUpload';
+import Step5AddressInfo from '../screen/onboarding/steps/Step5AddressInfo';
+import Step6ReviewSubmit from '../screen/onboarding/steps/Step6ReviewSubmit';
+import UpdatePersonalInfo from '../screen/account/UpdatePersonalInfo';
+import UpdateBankDetails from '../screen/account/UpdateBankDetails';
+import UpdateAddress from '../screen/account/UpdateAddress';
+import UpdateDocumnet from '../screen/account/UpdateDocumnet';
+import ComingSoonScreen from '../screen/dashboard/ComingSoonScreen';
+import PrivacyPolicy from '../screen/account/PrivacyPolicy';
+import TermsAndConditions from '../screen/account/TermsAndCondition';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -44,7 +57,7 @@ function BottomTabs() {
                 headerShown: false,
                 tabBarActiveTintColor: '#FFC107',
                 tabBarInactiveTintColor: 'gray',
-                  tabBarStyle: {
+                tabBarStyle: {
                     backgroundColor: "#000",
                     height: Platform.OS === 'ios' ? 60 : 70,
                     paddingBottom: Platform.OS === 'ios' ? 10 : 5,
@@ -56,12 +69,8 @@ function BottomTabs() {
         >
             <Tab.Screen name="Dashboard" component={Home} />
             <Tab.Screen name="Earnings" component={BookingsScreen} />
-            {/* <Tab.Screen name="Notifications" component={NotificationsScreen} /> */}
-            <Tab.Screen name="Profile" component={ProfileScreen} />
-           
-            <Tab.Screen name="Dashboard" component={Home} />
-            <Tab.Screen name="Bookings" component={BookingsScreen} />
             <Tab.Screen name="Notifications" component={NotificationsScreen} />
+            <Tab.Screen name="Profile" component={ProfileScreen} />
         </Tab.Navigator>
     );
 }
@@ -79,11 +88,11 @@ function DrawerMenu() {
             <Drawer.Screen name="Notification" component={NotificationsScreen} />
             <Drawer.Screen name="Training" component={TrainingScreen} />
             <Drawer.Screen name="Settings" component={SettingsScreen} />
-            <Drawer.Screen name="Support" component={SupportScreen} />
-            <Drawer.Screen name="Home" component={BottomTabs} />
-            <Drawer.Screen name="Earnings" component={BottomTabs} />
-            <Drawer.Screen name="Rate Card" component={BottomTabs} />
-            <Drawer.Screen name="Profile" component={ProfileScreen} />
+            {/* <Drawer.Screen name="Support" component={SupportScreen} /> */}
+            {/* <Drawer.Screen name="Home" component={BottomTabs} /> */}
+            {/* <Drawer.Screen name="Earnings" component={BottomTabs} /> */}
+            {/* <Drawer.Screen name="Rate Card" component={BottomTabs} /> */}
+            {/* <Drawer.Screen name="Profile" component={ProfileScreen} /> */}
         </Drawer.Navigator>
     );
 }
@@ -106,7 +115,27 @@ const NavigationStack = () => {
                 <Stack.Screen name="DashboardStack" component={DrawerMenu} />
                 <Stack.Screen name="AcceptedTaskDetailsScreen" component={AcceptedTaskDetailsScreen} />
                 <Stack.Screen name="Profile" component={ProfileScreen} />
-                <Stack.Screen name="DashboardStack" component={DrawerMenu} />
+                <Stack.Screen name="Support" component={SupportScreen} />
+                {/* <Stack.Screen name="Settings" component={SettingsScreen} />
+                <Stack.Screen name="Earnings" component={EarningScreen} /> */}
+
+
+                <Stack.Screen name="Step1_Mobile" component={Step1MobileVerification} />
+                <Stack.Screen name="Step2PersonalInfo" component={Step2PersonalInfo} />
+                <Stack.Screen name="Step3BankDetails" component={Step3BankDetails} />
+                <Stack.Screen name="Step4DocumentUpload" component={Step4DocumentUpload} />
+                <Stack.Screen name="Step5AddressInfo" component={Step5AddressInfo} />
+                <Stack.Screen name="Step6ReviewSubmit" component={Step6ReviewSubmit} />
+                <Stack.Screen name='UpdatePersonalInfo' component={UpdatePersonalInfo} />
+                <Stack.Screen name='UpdateBankDetails' component={UpdateBankDetails} />
+                <Stack.Screen name='UpdateAddress' component={UpdateAddress} />
+                <Stack.Screen name='UpdateDocuments' component={UpdateDocumnet} />
+                <Stack.Screen name='TrainingVideo' component={TrainingScreen} />
+                <Stack.Screen name='ComingSoon' component={ComingSoonScreen} />
+                <Stack.Screen name='PrivacyPolicy' component={PrivacyPolicy} />
+                <Stack.Screen name='TermsAndConditions' component={TermsAndConditions} />
+
+
             </Stack.Navigator>
         </NavigationContainer>
     )

@@ -10,7 +10,7 @@ const slides = [
     key: 'one',
     title: 'Welcome to Seeb Partner',
     text: 'Join our trusted network of home service professionals.',
-    image: require('../../assets/worker1.png'),
+    image: require('../../assets/worker.png'),
     step: 'Step 1 of 3',
   },
   {

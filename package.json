@@ -34,6 +34,7 @@
     "react-native-gesture-handler": "^2.24.0",
     "react-native-image-crop-picker": "^0.42.0",
     "react-native-image-picker": "^8.2.0",
+    "react-native-modal": "^14.0.0-rc.1",
     "react-native-modal-datetime-picker": "^18.0.0",
     "react-native-ota-hot-update": "^2.3.0",
     "react-native-picker-select": "^9.3.1",
@@ -71,4 +72,3 @@
     "node": ">=18"
   }
 }
-

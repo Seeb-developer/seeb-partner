@@ -6,6 +6,8 @@ import axios from 'axios';
 // Set your base URL here
 const BASE_URL = 'https://backend.seeb.in/partner'; // ✅ replace with real API
 
+export const API_URL = 'https://backend.seeb.in/';
+
 const api = axios.create({
     baseURL: BASE_URL,
     timeout: 10000,

@@ -11,18 +11,22 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { get } from '../../utils/api';
+import { API_URL, get } from '../../utils/api';
 import Navbar from '../../component/Navbar';
+import { capitalizeWord, formatAadhaar, formatDate } from '../../utils/formatters';
 
 const ProfileScreen = ({ navigation }) => {
   const [partner, setPartner] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [photo, setPhoto] = useState('')
 
   useEffect(() => {
     const fetchPartner = async () => {
+      // console.log(API_URL + 'partner/photo/' + partner.id)
       try {
         const json = await AsyncStorage.getItem('partner');
-        const { id } = JSON.parse(json);
+        const { id, photo } = JSON.parse(json);
+        setPhoto(photo)
         const res = await get(`/onboarding-data/${id}`);
         if (res.data.status === 200 && res.data.data?.partner) {
           setPartner(res.data.data.partner);
@@ -82,17 +86,19 @@ const ProfileScreen = ({ navigation }) => {
     );
   }
 
+  const imageUrl = partner?.id
+    ? `${API_URL}partner/photo/${partner?.id}?t=${Date.now()}`
+    : 'https://backend.seeb.in/public/uploads/team_documents/1744444325_20f3864a62b02fd1ba72.jpg';
+//  const imageUrl = `${API_URL}partner/photo/${partner?.id}`;
+// const imageUrl = `${API_URL}partner/photo/${id}?t=${Date.now()}`;
+
   return (
     <View style={{ flex: 1 }}>
       <Navbar title="Profile" onBack={() => navigation.goBack()} />
       <ScrollView style={styles.container}>
         <View style={styles.header}>
           <Image
-            source={{
-              uri:
-                partner.profile_photo ||
-                'https://backend.seeb.in/public/uploads/team_documents/1744444325_20f3864a62b02fd1ba72.jpg',
-            }}
+            source={{ uri: imageUrl }}
             style={styles.avatar}
           />
           <Text style={styles.name}>{partner.name}</Text>
@@ -101,11 +107,12 @@ const ProfileScreen = ({ navigation }) => {
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Personal Info</Text>
-          <DetailRow label="Birthdate" value={partner.dob} />
+          <DetailRow label="Birthdate" value={formatDate(partner.dob)} />
+          <DetailRow label="Gender" value={capitalizeWord(partner.gender)} />
           <DetailRow label="Mobile" value={partner.mobile} />
-          <DetailRow label="Aadhaar" value={partner.aadhaar_no} badge={renderBadge(partner.aadhaar_status)} />
-          <DetailRow label="PAN" value={partner.pan_no} badge={renderBadge(partner.pan_status)} />
-          <DetailRow label="Bank" value="Linked" badge={renderBadge(partner.bank_status)} />
+          <DetailRow label="Aadhaar" value={formatAadhaar(partner.aadhaar_no)} badge={renderBadge(partner.documents_verified)} />
+          <DetailRow label="PAN" value={partner.pan_no} badge={renderBadge(partner.documents_verified)} />
+          <DetailRow label="Bank" value="Linked" badge={renderBadge(partner.bank_verified)} />
         </View>
 
         <View style={styles.section}>

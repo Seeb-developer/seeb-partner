@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -8,48 +8,75 @@ import {
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Navbar from '../../component/Navbar';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const settingsItems = [
-    {
-        title: 'Account',
-        options: [
-            { label: 'Edit Profile', icon: 'person-outline', action: () => { } },
-            {
-                label: 'Edit Bank Details',
-                icon: 'card-outline', // 💳 Represents bank/account details
-                action: () => { }
-            },
-            {
-                label: 'Edit Documents',
-                icon: 'document-text-outline', // 📄 Represents document editing
-                action: () => { }
-            }
-            // { label: 'Change Password', icon: 'lock-closed-outline', action: () => { } },
-        ],
-    },
-    // {
-    //     title: 'Notifications',
-    //     options: [
-    //         { label: 'Push Notifications', icon: 'notifications-outline', action: () => { } },
-    //     ],
-    // },
-    {
-        title: 'Help & Support',
-        options: [
-            { label: 'FAQs', icon: 'help-circle-outline', action: () => { } },
-            { label: 'Contact Support', icon: 'call-outline', action: () => { } },
-        ],
-    },
-    {
-        title: 'App',
-        options: [
-            { label: 'Privacy Policy', icon: 'document-text-outline', action: () => { } },
-            { label: 'Terms & Conditions', icon: 'shield-checkmark-outline', action: () => { } },
-        ],
-    },
-];
 
 const SettingsScreen = ({ navigation }) => {
+
+    const [partnerId, setPartnerId] = useState(null);
+    //   const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchPartner = async () => {
+            try {
+                const json = await AsyncStorage.getItem('partner');
+                const { id } = JSON.parse(json);
+                console.log(json)
+                setPartnerId(id)
+            } catch (err) {
+                console.log('Error fetching profile:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPartner();
+    }, []);
+
+    const settingsItems = [
+        {
+            title: 'Account',
+            options: [
+                { label: 'Edit Profile', icon: 'person-outline', action: () => { navigation.navigate('UpdatePersonalInfo', { partner_id: partnerId }) } },
+                {
+                    label: 'Edit Bank Details',
+                    icon: 'card-outline', // 💳 Represents bank/account details
+                    action: () => { navigation.navigate('UpdateBankDetails', { partner_id: partnerId }) }
+                },
+                {
+                    label: 'Edit Address',
+                    icon: 'location-outline', // 📄 Represents document editing
+                    action: () => { navigation.navigate('UpdateAddress', { partner_id: partnerId }) }
+                },
+                {
+                    label: 'Edit Documents',
+                    icon: 'document-text-outline', // 📄 Represents document editing
+                    action: () => { navigation.navigate('UpdateDocuments', { partner_id: partnerId }) }
+                },
+                // { label: 'Change Password', icon: 'lock-closed-outline', action: () => { } },
+            ],
+        },
+        // {
+        //     title: 'Notifications',
+        //     options: [
+        //         { label: 'Push Notifications', icon: 'notifications-outline', action: () => { } },
+        //     ],
+        // },
+        {
+            title: 'Help & Support',
+            options: [
+                { label: 'FAQs', icon: 'help-circle-outline', action: () => navigation.navigate('ComingSoon') },
+                { label: 'Contact Support', icon: 'call-outline', action: () => { navigation.navigate('Support')} },
+            ],
+        },
+        {
+            title: 'App',
+            options: [
+                { label: 'Privacy Policy', icon: 'document-text-outline', action: () => { navigation.navigate('PrivacyPolicy')} },
+                { label: 'Terms & Conditions', icon: 'shield-checkmark-outline', action: () => {navigation.navigate('TermsAndConditions') } },
+            ],
+        },
+    ];
     return (
         <View style={{ flex: 1 }}>
             <Navbar title="Settings" onBack={() => navigation.goBack()} />
