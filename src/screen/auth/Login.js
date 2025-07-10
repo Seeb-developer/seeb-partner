@@ -76,6 +76,7 @@ const Login = ({ navigation }) => {
     };
 
     const handleVerifyOtp = async () => {
+        
         // Alert.alert(typeof otp)
         if (!otp || otp.length < 4) {
             Toast.show({ type: 'error', text1: 'Invalid OTP' });
@@ -83,9 +84,10 @@ const Login = ({ navigation }) => {
         }
 
         try {
+            const fcm_token = await AsyncStorage.getItem('fcmtoken')
             setLoading(true);
 
-            const res = await post('/login', { mobile, otp: otp.join('') });
+            const res = await post('/login', { mobile, otp: otp.join(''), fcm_token });
             console.log('Login response:', res.data);
 
             // Save token

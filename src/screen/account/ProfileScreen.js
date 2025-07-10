@@ -89,20 +89,25 @@ const ProfileScreen = ({ navigation }) => {
   const imageUrl = partner?.id
     ? `${API_URL}partner/photo/${partner?.id}?t=${Date.now()}`
     : 'https://backend.seeb.in/public/uploads/team_documents/1744444325_20f3864a62b02fd1ba72.jpg';
-//  const imageUrl = `${API_URL}partner/photo/${partner?.id}`;
-// const imageUrl = `${API_URL}partner/photo/${id}?t=${Date.now()}`;
+  //  const imageUrl = `${API_URL}partner/photo/${partner?.id}`;
+  // const imageUrl = `${API_URL}partner/photo/${id}?t=${Date.now()}`;
 
   return (
     <View style={{ flex: 1 }}>
       <Navbar title="Profile" onBack={() => navigation.goBack()} />
       <ScrollView style={styles.container}>
-        <View style={styles.header}>
+        <View style={styles.profileSection}>
+          <View style={styles.avatarBox}>
           <Image
             source={{ uri: imageUrl }}
             style={styles.avatar}
           />
+          </View>
           <Text style={styles.name}>{partner.name}</Text>
-          <Text style={styles.work}>{partner.work}</Text>
+          <Text style={styles.work}>{partner.profession}</Text>
+          <Text style={styles.rating}>
+            ⭐ {partner.rating ? partner.rating.toFixed(1) : '4.3'} / 5.0
+          </Text>
         </View>
 
         <View style={styles.card}>
@@ -164,15 +169,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
   },
-  header: {
+   profileSection: {
     alignItems: 'center',
-    marginBottom: 24,
+    paddingVertical: 25,
+    backgroundColor: '#FFF3E0', // soft orange background
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    marginBottom: 10,
+    marginTop:-16
+  },
+   avatarBox: {
+    backgroundColor: '#fff',
+    padding: 2,
+    borderRadius: 60,
+    borderWidth: 2,
+    borderColor: '#FF9800',
+    marginBottom:10
   },
   avatar: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    marginBottom: 12,
+    // marginBottom: 12,
   },
   name: {
     fontSize: 20,

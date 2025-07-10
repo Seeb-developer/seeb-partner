@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,8 @@ import ReactNativeBlobUtil from 'react-native-blob-util';
 import DeviceInfo from 'react-native-device-info';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { OnboardingProvider } from './src/context/OnboardingContext';
+import { notificationListener, requestUserPermission, setupNotificationListeners } from './src/utils/NotificationHelper';
+import { NotificationContext, NotificationProvider } from './src/context/NotificationContext';
 
 const App = () => {
 
@@ -26,13 +28,18 @@ const App = () => {
   const [updateUrl, setUpdateUrl] = useState(null);
 
   useEffect(() => {
+    requestUserPermission();
+    // setupNotificationListeners(); // pass navigation if needed
+  }, []);
+
+  useEffect(() => {
     const checkVersion = async () => {
       try {
         setChecking(true);
         const version = DeviceInfo.getVersion();
-        // setCurrentVersion(version);
+        setCurrentVersion(version);
 
-        const res = await fetch(`https://backend.seeb.in/ota/update.json?ts=${Date.now()}`);
+        const res = await fetch(`https://app.seeb.in/seeb-partner/update.json?ts=${Date.now()}`);
         const data = await res.json();
 
         const url =
@@ -75,12 +82,30 @@ const App = () => {
     }
   };
 
+
+  const AppInner = () => {
+    const { addNotification, refreshNotifications } = useContext(NotificationContext);
+
+    useEffect(() => {
+      refreshNotifications()
+      setupNotificationListeners(null, addNotification);
+    }, []);
+
+    return (
+      <>
+        <NavigationStack />
+      </>
+    );
+  };
+
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
-        <OnboardingProvider>
-          <NavigationStack />
-        </OnboardingProvider>
+        <NotificationProvider>
+          <OnboardingProvider>
+            <AppInner />
+          </OnboardingProvider>
+        </NotificationProvider>
 
         {/* Optional: Bottom Banner */}
         {showUpdateModal && (

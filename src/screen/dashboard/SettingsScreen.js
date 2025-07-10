@@ -65,15 +65,34 @@ const SettingsScreen = ({ navigation }) => {
         {
             title: 'Help & Support',
             options: [
-                { label: 'FAQs', icon: 'help-circle-outline', action: () => navigation.navigate('ComingSoon') },
-                { label: 'Contact Support', icon: 'call-outline', action: () => { navigation.navigate('Support')} },
+                {
+                    label: 'FAQs',
+                    icon: 'help-circle-outline',
+                    action: () => navigation.navigate('FAQ') // replace with your actual screen
+                },
+                {
+                    label: 'Raise a Ticket',
+                    icon: 'chatbox-ellipses-outline',
+                    action: () => navigation.navigate('RaiseTicket') // replace with your actual screen
+                },
+                {
+                    label: 'My Tickets',
+                    icon: 'document-outline',
+                    action: () => navigation.navigate('MyTickets') // replace with your actual screen
+                },
+                {
+                    label: 'Contact Support',
+                    icon: 'call-outline',
+                    action: () => navigation.navigate('Support')
+                },
             ],
         },
+
         {
             title: 'App',
             options: [
-                { label: 'Privacy Policy', icon: 'document-text-outline', action: () => { navigation.navigate('PrivacyPolicy')} },
-                { label: 'Terms & Conditions', icon: 'shield-checkmark-outline', action: () => {navigation.navigate('TermsAndConditions') } },
+                { label: 'Privacy Policy', icon: 'document-text-outline', action: () => { navigation.navigate('PrivacyPolicy') } },
+                { label: 'Terms & Conditions', icon: 'shield-checkmark-outline', action: () => { navigation.navigate('TermsAndConditions') } },
             ],
         },
     ];
@@ -114,9 +133,9 @@ const styles = StyleSheet.create({
     },
     sectionTitle: {
         fontSize: 14,
-        color: '#999',
+        color: '#000',
         marginBottom: 8,
-        fontWeight: '500',
+        fontWeight: '600',
     },
     item: {
         flexDirection: 'row',

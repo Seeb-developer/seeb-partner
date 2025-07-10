@@ -11,7 +11,7 @@ import {
 import ViewShot, { captureRef } from 'react-native-view-shot';
 import QRCode from 'react-native-qrcode-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { get } from '../../utils/api';
+import { API_URL, get } from '../../utils/api';
 import Navbar from '../../component/Navbar';
 
 const IDCardScreen = ({ navigation }) => {
@@ -55,6 +55,10 @@ const IDCardScreen = ({ navigation }) => {
     }
   };
 
+  const imageUrl = user?.id
+    ? `${API_URL}partner/photo/${user.id}?t=${Date.now()}`
+    : 'https://backend.seeb.in/public/uploads/team_documents/1744444325_20f3864a62b02fd1ba72.jpg';
+
   return (
     <View style={{ flex: 1, backgroundColor: '#cce6ff' }}>
       <Navbar title="ID Card" onBack={() => navigation.goBack()} />
@@ -70,7 +74,7 @@ const IDCardScreen = ({ navigation }) => {
             <Text style={styles.company}>Seeb Design Pvt Ltd</Text>
 
             {/* User Profile */}
-            <Image source={{ uri: user?.profilePic }} style={styles.avatar} />
+            <Image source={{ uri: imageUrl }} style={styles.avatar} />
             {/* <Image source={require('../../assets/id.jpeg')} style={styles.avatar} /> */}
             <Text style={styles.name}>{user?.name}</Text>
             {/* <Text style={styles.position}>C.E.O</Text> */}
@@ -78,7 +82,7 @@ const IDCardScreen = ({ navigation }) => {
 
             <View style={styles.row}>
               <Text style={styles.label}>User ID:</Text>
-              <Text style={styles.value}>{user?.id}</Text>
+              <Text style={styles.value}>#{user?.id}</Text>
             </View>
             <View style={styles.row}>
               <Text style={styles.label}>Mobile:</Text>
@@ -86,8 +90,8 @@ const IDCardScreen = ({ navigation }) => {
               <Text style={styles.value}>{user?.mobile}</Text>
             </View>
             <View style={styles.row}>
-              <Text style={styles.label}>Work:</Text>
-              <Text style={styles.value}>{user?.work}</Text>
+              <Text style={styles.label}>Profession:</Text>
+              <Text style={styles.value}>{user?.profession}</Text>
             </View>
 
             {/* QR Code */}
@@ -126,23 +130,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   card: {
-    width: '90%',
-    backgroundColor: '#fff',
+    width: '100%',
+    backgroundColor: '#121212', // Dark card
     borderRadius: 12,
     padding: 20,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#003366',
+    borderColor: '#FFD700', // Gold border
   },
   logo: {
     width: 170,
-    height: 100,
-    marginBottom: 5,
+    height: 80,
+    // marginBottom: 5,
   },
   company: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#003366',
+    color: '#FFD700', // Gold color
     marginBottom: 10,
   },
   avatar: {
@@ -151,13 +155,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 10,
     borderWidth: 2,
-    borderColor: '#003366',
+    borderColor: '#FFD700',
   },
   name: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 5,
-    color: '#000',
+    marginBottom: 15,
+    color: '#fff',
   },
   position: {
     fontSize: 16,
@@ -174,10 +178,10 @@ const styles = StyleSheet.create({
   },
   label: {
     fontWeight: '600',
-    color: '#444',
+    color: '#bbb',
   },
   value: {
-    color: '#111',
+    color: '#fff',
   },
   qrBox: {
     marginTop: 20,
@@ -204,8 +208,9 @@ const styles = StyleSheet.create({
     padding: 10,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#b3d1ff',
+    borderColor: '#FFD700',
     width: '100%',
+    marginBottom:8,
   },
   addressHeader: {
     fontWeight: '700',

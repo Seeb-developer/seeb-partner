@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "835008801894",
+    "project_id": "seeb-partner",
+    "storage_bucket": "seeb-partner.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:835008801894:android:70e46c5e6f388db92391a7",
+        "android_client_info": {
+          "package_name": "com.seebpartner"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDr9I9o-huS4D0BzJHzx6aNRpubEDXigQQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

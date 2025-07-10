@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,9 @@ import { Dimensions } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DashboardAssignedTask from '../../component/DashboardAssignedTask'
+import { getUnreadCount } from '../../utils/NotificationHelper';
+import { useFocusEffect } from '@react-navigation/native';
+import { NotificationContext } from '../../context/NotificationContext';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -19,6 +22,8 @@ const Home = ({ navigation }) => {
 
   const [name, setName] = useState(null);
   const [loading, setLoading] = useState(true);
+const { unreadCount } = useContext(NotificationContext);
+
 
   useEffect(() => {
     const fetchPartner = async () => {
@@ -91,7 +96,7 @@ const Home = ({ navigation }) => {
   const handleReject = () => {
     setAssignedTask(null);
   };
-
+  
 
   return (
     <View style={{ flex: 1 }}>
@@ -100,9 +105,22 @@ const Home = ({ navigation }) => {
         <TouchableOpacity onPress={() => navigation.openDrawer()}>
           <Ionicons name="menu" size={38} color="#fff" />
         </TouchableOpacity>
-        {/* <Text style={styles.headerTitle}>Dashboard</Text> */}
-        <Image source={require('../../assets/logo-main.png')} style={{ width: 168, height: 58 }} resizeMode='contain' />
+
+        <Image source={require('../../assets/logo-main.png')} style={{ width: 168, height: 58 }} resizeMode="contain" />
+
+        <View style={styles.notificationWrapper}>
+          <TouchableOpacity onPress={() => navigation.navigate('Notification')}>
+            <Ionicons name="notifications-outline" size={28} color="#fff" />
+            {unreadCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{unreadCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+
       </View>
+
       <ScrollView style={styles.container}>
 
         {/* Welcome */}
@@ -196,6 +214,31 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 10
   },
+  notificationWrapper: {
+    position: 'absolute',
+    right: 16,
+    top: 14,
+  },
+
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -6,
+    backgroundColor: '#FF3B30',
+    borderRadius: 8,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    minWidth: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  badgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+
   headerTitle: {
     fontSize: 22,
     fontWeight: 'bold',

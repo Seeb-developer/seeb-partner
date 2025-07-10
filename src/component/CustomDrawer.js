@@ -15,16 +15,18 @@ import { API_URL } from '../utils/api';
 const ACCENT_COLOR = '#FF9800'; // Orange
 
 const CustomDrawer = ({ navigation, state }) => {
-  const [name, setName] = useState('Haseeb Khan');
+  const [name, setName] = useState('');
+  const [profession, setProfession] = useState('');
   const [id, setId] = useState('')
 
   useEffect(() => {
     const fetchName = async () => {
       try {
         const json = await AsyncStorage.getItem('partner');
-        const { name, id } = JSON.parse(json);
+        const { name, id, profession } = JSON.parse(json);
         setId(id)
         setName(name);
+        setProfession(profession)
       } catch (e) {
         console.log('Error:', e);
       }
@@ -35,15 +37,17 @@ const CustomDrawer = ({ navigation, state }) => {
   const currentRoute = state.routeNames[state.index];
 
   const drawerItems = [
-    { label: 'Home', icon: 'home-outline', screen: 'Home' },
-    { label: 'Earnings', icon: 'wallet-outline', screen: 'Earnings' },
-    { label: 'Rate Card', icon: 'bookmark-outline', screen: 'Rate Card' },
-    // { label: 'Notification', icon: 'notifications-outline', screen: 'Notification' },
-    { label: 'Training', icon: 'pulse-outline', screen: 'Training' },
-    { label: 'Profile', icon: 'person-outline', screen: 'Profile' },
-    // { label: 'Support', icon: 'help-circle-outline', screen: 'Support' },
-    { label: 'Settings', icon: 'settings-outline', screen: 'Settings' },
-  ];
+  { label: 'Home', icon: 'home-outline', screen: 'Home' },
+  { label: 'Earnings', icon: 'wallet-outline', screen: 'Earnings' },
+  { label: 'Rate Card', icon: 'bookmark-outline', screen: 'Rate Card' },
+  // { label: 'Notification', icon: 'notifications-outline', screen: 'Notification' },
+  { label: 'Training', icon: 'pulse-outline', screen: 'Training' },
+  { label: 'Payments Transactions', icon: 'cash-outline', screen: 'Payments' },
+  { label: 'Refer and Earn', icon: 'gift-outline', screen: 'Refer' },
+  { label: 'Profile', icon: 'person-outline', screen: 'Profile' },
+  { label: 'Settings', icon: 'settings-outline', screen: 'Settings' },
+];
+
 
 
   const handleLogout = async () => {
@@ -60,13 +64,19 @@ const CustomDrawer = ({ navigation, state }) => {
         style={{ marginTop: 0 }}
       >
         <View style={styles.profileSection}>
+          <TouchableOpacity onPress={()=> navigation.navigate('Profile')}>
+
           <View style={styles.avatarBox}>
+
             <Image
               source={{ uri: imageUrl }}
               style={styles.avatar}
             />
           </View>
+          </TouchableOpacity>
           <Text style={styles.name}>{name}</Text>
+          <Text style={styles.work}>{profession}</Text>
+          
         </View>
 
         <View style={styles.menu}>
@@ -139,7 +149,12 @@ const styles = StyleSheet.create({
     color: '#333',
     marginTop: 8,
   },
-
+  work: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginTop: 4,
+  },
   menu: {
     paddingHorizontal: 16,
     paddingTop: 10,

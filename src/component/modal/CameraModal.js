@@ -6,7 +6,7 @@ import {
 // import { Camera, useCameraDevice } from 'react-native-vision-camera';
 import ImageCropPicker from 'react-native-image-crop-picker';
 // import TextRecognition from 'react-native-text-recognition';
-import TextRecognition from '@react-native-ml-kit/text-recognition';
+// import TextRecognition from '@react-native-ml-kit/text-recognition';
 
 const { width } = Dimensions.get('window');
 
@@ -42,9 +42,9 @@ const CameraModal = ({ visible, onClose, onCapture, circular = false }) => {
       setPreviewUri(cropped.path);
 
       // Run OCR
-      const text = await TextRecognition.recognize(cropped.path);
-      console.log('OCR Result:', text);
-      setOcrText(text);
+      // const text = await TextRecognition.recognize(cropped.path);
+      // console.log('OCR Result:', text);
+      // setOcrText(text);
     } catch (err) {
       console.warn('Cropping or OCR failed', err);
     }

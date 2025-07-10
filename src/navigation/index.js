@@ -38,6 +38,10 @@ import UpdateDocumnet from '../screen/account/UpdateDocumnet';
 import ComingSoonScreen from '../screen/dashboard/ComingSoonScreen';
 import PrivacyPolicy from '../screen/account/PrivacyPolicy';
 import TermsAndConditions from '../screen/account/TermsAndCondition';
+import RaiseTicketScreen from '../screen/setting/RaiseTicketScreen';
+import TicketChat from '../screen/setting/TicketChat';
+import MyTicketsScreen from '../screen/setting/MyTicketsScreen';
+import FAQScreen from '../screen/setting/FAQScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -88,11 +92,9 @@ function DrawerMenu() {
             <Drawer.Screen name="Notification" component={NotificationsScreen} />
             <Drawer.Screen name="Training" component={TrainingScreen} />
             <Drawer.Screen name="Settings" component={SettingsScreen} />
-            {/* <Drawer.Screen name="Support" component={SupportScreen} /> */}
-            {/* <Drawer.Screen name="Home" component={BottomTabs} /> */}
-            {/* <Drawer.Screen name="Earnings" component={BottomTabs} /> */}
-            {/* <Drawer.Screen name="Rate Card" component={BottomTabs} /> */}
-            {/* <Drawer.Screen name="Profile" component={ProfileScreen} /> */}
+            <Drawer.Screen name="Payments" component={ComingSoonScreen} />
+            <Drawer.Screen name="Refer" component={ComingSoonScreen} />
+
         </Drawer.Navigator>
     );
 }
@@ -134,6 +136,11 @@ const NavigationStack = () => {
                 <Stack.Screen name='ComingSoon' component={ComingSoonScreen} />
                 <Stack.Screen name='PrivacyPolicy' component={PrivacyPolicy} />
                 <Stack.Screen name='TermsAndConditions' component={TermsAndConditions} />
+
+                <Stack.Screen name="RaiseTicket" component={RaiseTicketScreen} />
+                <Stack.Screen name="TicketChat" component={TicketChat} />
+                <Stack.Screen name="MyTickets" component={MyTicketsScreen} />
+                <Stack.Screen name="FAQ" component={FAQScreen} />
 
 
             </Stack.Navigator>
