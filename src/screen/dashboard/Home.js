@@ -12,25 +12,34 @@ import { Dimensions } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DashboardAssignedTask from '../../component/DashboardAssignedTask'
-import { getUnreadCount } from '../../utils/NotificationHelper';
+import { clearNotifications, getUnreadCount } from '../../utils/NotificationHelper';
 import { useFocusEffect } from '@react-navigation/native';
 import { NotificationContext } from '../../context/NotificationContext';
+import useAssignedBookingListener from '../../hooks/useAssignedBookingListener';
+import { playAlarm, stopAlarm } from '../../utils/playAlarm';
+import { get, post } from '../../utils/api';
+import Toast from 'react-native-toast-message';
 
 const screenWidth = Dimensions.get('window').width;
 
 const Home = ({ navigation }) => {
 
+
+
   const [name, setName] = useState(null);
+  const [partner_id, setPartnerId] = useState(null);
   const [loading, setLoading] = useState(true);
-const { unreadCount } = useContext(NotificationContext);
+  const { unreadCount } = useContext(NotificationContext);
 
 
   useEffect(() => {
+    // playAlarm();
     const fetchPartner = async () => {
       try {
         const json = await AsyncStorage.getItem('partner');
-        const { name } = JSON.parse(json);
+        const { name, id } = JSON.parse(json);
         setName(name);
+        setPartnerId(id);
       } catch (err) {
         console.log('Error fetching profile:', err);
       } finally {
@@ -40,6 +49,11 @@ const { unreadCount } = useContext(NotificationContext);
 
     fetchPartner();
   }, []);
+
+
+
+  const { assignedTask, setAssignedTask } = useAssignedBookingListener();
+
 
   const [dashboardData, setDashboardData] = useState({
     earnings: 12000,
@@ -70,33 +84,61 @@ const { unreadCount } = useContext(NotificationContext);
     ],
   };
 
-  const sampleTask = {
-    booking_id: 1234,
-    service_name: 'False Ceiling Installation',
-    slot_date: '2025-06-29',
-    slot_time: '10:00 AM',
-    status: 'assigned',
-    amount: 5500,
-    description: 'Install gypsum ceiling in living room, 12x15 ft.',
-    customer: {
-      name: 'Rahul Mehta',
-      mobile: '9876543210',
-      address: '12/3, MG Road, Pune, Maharashtra',
-    },
-  };
-  ;
-
-  const [assignedTask, setAssignedTask] = useState(sampleTask); // only 1 task now
   const [acceptedTasks, setAcceptedTasks] = useState([]);
 
-  const handleAccept = () => {
-    setAcceptedTasks((prev) => [...prev, assignedTask]);
-    setAssignedTask(null); // remove from assigned
+  const handleAccept = async () => {
+    try {
+      clearNotifications(); // Clear all notifications
+      stopAlarm(); // Stop alarm when accepted
+
+      if (!assignedTask) return;
+
+      // ✅ Call Accept API
+      const response = await post(`booking-assignment/accept`, {
+        booking_service_id: assignedTask.booking_service_id,
+        partner_id: assignedTask.partner_id,
+      });
+
+      if (response.data?.status === 200) {
+        // Show success and update UI
+        Toast.show({ type: 'success', text1: 'Booking accepted!' });
+
+        // setAcceptedTasks((prev) => [...prev, assignedTask]);
+        setAssignedTask(null); // Remove from assigned
+      } else {
+        Toast.show({ type: 'error', text1: 'Failed to accept booking', text2: response.data?.message || '' });
+      }
+    } catch (err) {
+      console.error('❌ Accept booking error:', err);
+      Toast.show({ type: 'error', text1: 'Error accepting booking' });
+    }
   };
   const handleReject = () => {
     setAssignedTask(null);
   };
-  
+
+  const fetchBookings = async () => {
+    const acceptedRes = await get(`accepted-bookings/${2}`);
+    console.log('Accepted bookings:', acceptedRes.data);
+
+    if (acceptedRes.data?.status === 200 && Array.isArray(acceptedRes.data.data)) {
+      setAcceptedTasks(acceptedRes.data.data); // overwrite with new list
+    } else {
+      console.warn('⚠️ Failed to fetch accepted bookings');
+    }
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+
+      fetchBookings();
+
+      return () => {
+        // Cleanup if needed
+      };
+    }, [partner_id])
+  );
+
 
   return (
     <View style={{ flex: 1 }}>
@@ -139,9 +181,9 @@ const { unreadCount } = useContext(NotificationContext);
             <Text style={styles.sectionTitle}>Accepted Orders</Text>
             {acceptedTasks.map((task) => (
               <TouchableOpacity
-                key={task.booking_id}
+                key={task.id}
                 onPress={() =>
-                  navigation.navigate('AcceptedTaskDetailsScreen', { task })
+                  navigation.navigate('AcceptedTaskDetailsScreen', { assignmentId: task.id })
                 }
                 style={styles.acceptedCardWrapper}
               >
@@ -149,11 +191,11 @@ const { unreadCount } = useContext(NotificationContext);
                   <View style={{ flex: 1 }}>
                     <Text style={styles.serviceName}>{task.service_name}</Text>
                     <Text style={styles.bookingInfo}>
-                      📅 {task.slot_date}   🕒 {task.slot_time}
+                      📅 {task.estimated_start_date}   🕒 {task.slot_time}
                     </Text>
                   </View>
                   <View style={styles.rightSection}>
-                    <Text style={styles.amount}>₹{task.amount}</Text>
+                    <Text style={styles.amount}>₹{task.assigned_amount}</Text>
                     <View style={styles.statusBadge}>
                       <Text style={styles.statusText}>Accepted</Text>
                     </View>
@@ -287,7 +329,7 @@ const styles = StyleSheet.create({
   },
 
   amount: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#2E7D32',
     marginBottom: 8,

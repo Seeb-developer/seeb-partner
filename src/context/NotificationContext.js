@@ -1,50 +1,80 @@
-// src/context/NotificationContext.js
 import React, { createContext, useEffect, useState } from 'react';
+import { get, post, del } from '../utils/api'; // your API utility
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import notifee from '@notifee/react-native';
 
 export const NotificationContext = createContext();
 
 export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [partnerId, setPartnerId] = useState(null);
 
+  const getPartnerId = async () => {
+    try {
+      const partnerJson = await AsyncStorage.getItem('partner');
+      const partner = partnerJson ? JSON.parse(partnerJson) : null;
+
+      if (partner && partner.id) {
+        setPartnerId(partner.id);
+        return partner.id;
+      } else {
+        console.warn('❌ Partner not found in storage');
+        return null;
+      }
+    } catch (error) {
+      console.error('🔥 Error getting partner ID:', error);
+      return null;
+    }
+  };
+
+
+  // 🔄 Load from backend only
   const loadNotifications = async () => {
-    const stored = await AsyncStorage.getItem('notifications');
-    const parsed = stored ? JSON.parse(stored) : [];
-    setNotifications(parsed);
-    const unread = parsed.filter(n => !n.read).length;
-    setUnreadCount(unread);
+    try {
+      const partnerId = await getPartnerId();
+
+      const res = await post('notifications/user', { user_id: partnerId, user_type: 'partner' });
+      const data = res.data || [];
+      setNotifications(data.data || []);
+      setUnreadCount(data.unread_count || 0);
+    } catch (err) {
+      console.error('❌ Failed to load notifications:', err);
+    }
   };
 
-  const addNotification = async (newNotif) => {
-    const stored = await AsyncStorage.getItem('notifications');
-    const parsed = stored ? JSON.parse(stored) : [];
-    const updated = [newNotif, ...parsed];
-    await AsyncStorage.setItem('notifications', JSON.stringify(updated));
-    setNotifications(updated);
-    setUnreadCount(updated.filter(n => !n.read).length);
-  };
-
+  // ✅ Just mark as read via API
   const markAllAsRead = async () => {
-    const updated = notifications.map(n => ({ ...n, read: true }));
-    await AsyncStorage.setItem('notifications', JSON.stringify(updated));
-    setNotifications(updated);
-    setUnreadCount(0);
+    try {
+      await post('notifications/mark-all-read', { user_id: partnerId, user_type: 'partner' });
+      await notifee.setBadgeCount(0); // Reset badge count
+      setUnreadCount(0);
+      loadNotifications();
+    } catch (err) {
+      console.error('❌ Failed to mark all as read:', err);
+    }
   };
 
   const removeNotification = async (id) => {
-    const updated = notifications.filter(n => n.id !== id);
-    await AsyncStorage.setItem('notifications', JSON.stringify(updated));
-    setNotifications(updated);
-    setUnreadCount(updated.filter(n => !n.read).length);
+    try {
+      await del(`notifications/delete/${id}`);
+      loadNotifications();
+    } catch (err) {
+      console.error('❌ Failed to remove notification:', err);
+    }
   };
 
   const clearAllNotifications = async () => {
-    await AsyncStorage.removeItem('notifications');
-    setNotifications([]);
-    setUnreadCount(0);
+    try {
+      await post('notifications/clear-all', { user_id: partnerId, user_type: 'partner' });
+      await notifee.setBadgeCount(0);
+      setNotifications([]);
+      setUnreadCount(0);
+      loadNotifications();
+    } catch (err) {
+      console.error('❌ Failed to clear notifications:', err);
+    }
   };
-
 
   useEffect(() => {
     loadNotifications();
@@ -55,11 +85,10 @@ export const NotificationProvider = ({ children }) => {
       value={{
         notifications,
         unreadCount,
-        addNotification,
         markAllAsRead,
         refreshNotifications: loadNotifications,
         removeNotification,
-        clearAllNotifications
+        clearAllNotifications,
       }}
     >
       {children}

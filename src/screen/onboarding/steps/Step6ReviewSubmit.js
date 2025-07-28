@@ -68,6 +68,7 @@ const Step6ReviewSubmit = ({ navigation }) => {
 
     setFormErrors({});
     setLoading(true)
+    const fcm_token = await AsyncStorage.getItem('fcmtoken')
 
     const formdata = new FormData();
     formdata.append("name", personal.fullName);
@@ -94,6 +95,7 @@ const Step6ReviewSubmit = ({ navigation }) => {
     formdata.append("city", address.city);
     formdata.append("state", address.state);
     formdata.append("country", address?.country || "India");
+    formdata.append('fcm_token', fcm_token)
 
     // Append image files - they must be actual File or Blob objects in React Native
     const appendFile = (key, uri) => {

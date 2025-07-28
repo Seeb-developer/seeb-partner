@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -9,24 +9,52 @@ import {
   TextInput,
   Image,
   Linking,
+  ActivityIndicator,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import * as ImagePicker from 'react-native-image-picker'; // or use react-native-image-picker
 import Navbar from '../../component/Navbar';
 import * as Progress from 'react-native-progress';
-
+import { get } from '../../utils/api';
 const AcceptedTaskDetailsScreen = ({ route, navigation }) => {
-  const { task } = route.params;
-
-  const [status, setStatus] = useState(task.status || 'in_progress');
-  const [checklist, setChecklist] = useState([
-    { label: 'Material Collected', checked: false },
-    { label: 'Site Visited', checked: false },
-    { label: 'Work Started', checked: false },
-    { label: 'Work Completed', checked: false },
-  ]);
+  const { assignmentId } = route.params; // 👈 expect to receive assignmentId
+  const [loading, setLoading] = useState(true);
+  const [assignment, setAssignment] = useState(null);
+  const [checklist, setChecklist] = useState([]);
+  const [status, setStatus] = useState('in_progress');
   const [notes, setNotes] = useState('');
   const [imageUri, setImageUri] = useState(null);
+
+  useEffect(() => {
+    fetchAssignmentDetails();
+  }, []);
+
+  const fetchAssignmentDetails = async () => {
+    try {
+      const response = await get(`assignment/details/${assignmentId}`);
+      const data = response.data;
+      if (data.status === 200) {
+        // console.log('Assignment Details:', data.data.assignment);
+        setAssignment(data.data.assignment);
+        setStatus(data.data.assignment.status || 'in_progress');
+
+        // If checklist items are present in future
+        const checklistItems = data?.data.checklist?.items?.length
+          ? data?.data?.checklist?.items
+          : [
+            { label: 'Material Collected', checked: false },
+            { label: 'Site Visited', checked: false },
+            { label: 'Work Started', checked: false },
+            { label: 'Work Completed', checked: false },
+          ];
+        setChecklist(checklistItems);
+      }
+    } catch (error) {
+      console.error('Failed to fetch details:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const toggleChecklistItem = (index) => {
     const updated = [...checklist];
@@ -35,10 +63,11 @@ const AcceptedTaskDetailsScreen = ({ route, navigation }) => {
   };
 
   const handlePhotoUpload = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images });
-    if (!result.canceled) {
-      setImageUri(result.assets[0].uri);
-    }
+    ImagePicker.launchImageLibrary({ mediaType: 'photo' }, (res) => {
+      if (res.assets && res.assets.length > 0) {
+        setImageUri(res.assets[0].uri);
+      }
+    });
   };
 
   const handleStatusChange = () => {
@@ -46,34 +75,56 @@ const AcceptedTaskDetailsScreen = ({ route, navigation }) => {
   };
 
   const openMap = () => {
-    const address = task.customer_address || '';
-    const query = encodeURIComponent(address);
+    const query = encodeURIComponent(
+      `${assignment.address_line1 || ''}, ${assignment.address_line2 || ''}`
+    );
     Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${query}`);
   };
 
-  const checklistProgress = checklist.filter(item => item.checked).length / checklist.length;
+  const checklistProgress =
+    checklist.filter((item) => item.checked).length / checklist.length;
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#03A9F4" />
+      </View>
+    );
+  }
+
+  if (!assignment) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text>Assignment not found.</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1 }}>
-      <Navbar title={`Booking ID: #${task.booking_id}`} onBack={() => navigation.goBack()} />
+      <Navbar title={`Booking ID: #${assignment.booking_number}`} onBack={() => navigation.goBack()} />
       <ScrollView style={styles.container}>
         <Text style={styles.sectionTitle}>Customer Details</Text>
         <View style={styles.card}>
-          <Text style={styles.text}>Name: {task.customer?.name || 'John Doe'}</Text>
-          <Text style={styles.text}>Phone: {task.customer?.mobile || '9876543210'}</Text>
+          <Text style={styles.text}>Name: {assignment.customer_name}</Text>
+          <Text style={styles.text}>Phone: {assignment.customer_mobile}</Text>
           <Text style={[styles.text, { color: '#007AFF' }]} onPress={openMap}>
-            Address: {task.customer?.address || 'Bangalore, India'} (View on Map)
+            Address: {assignment.address_line1}, {assignment.address_line2} (View on Map)
           </Text>
         </View>
 
         <Text style={styles.sectionTitle}>Task Details</Text>
         <View style={styles.card}>
-          <Text style={styles.text}>Service: {task.service_name}</Text>
-          <Text style={styles.text}>Date: {task.slot_date}</Text>
-          <Text style={styles.text}>Time: {task.slot_time}</Text>
-          <Text style={styles.text}>Amount: ₹{task.amount}</Text>
-          <Text style={styles.text}>Description: {task.description || 'No additional info'}</Text>
-          <View style={[styles.statusBadge, status === 'completed' ? styles.completed : styles.inProgress]}>
+          <Text style={styles.text}>Service: {assignment.service_name}</Text>
+          <Text style={styles.text}>Date: {assignment.booking_slot_date}</Text>
+          <Text style={styles.text}>Amount: ₹{assignment.assigned_amount}</Text>
+          <Text style={styles.text}>Helpers: {assignment.helper_count}</Text>
+          <View
+            style={[
+              styles.statusBadge,
+              status === 'completed' ? styles.completed : styles.inProgress,
+            ]}
+          >
             <Text style={styles.statusText}>{status.toUpperCase()}</Text>
           </View>
         </View>
@@ -100,11 +151,6 @@ const AcceptedTaskDetailsScreen = ({ route, navigation }) => {
           placeholderTextColor="#222"
         />
 
-        {/* <Text style={styles.sectionTitle}>Upload Photo</Text>
-        <TouchableOpacity style={styles.uploadBtn} onPress={handlePhotoUpload}>
-          <Ionicons name="cloud-upload-outline" size={20} color="#fff" />
-          <Text style={styles.uploadBtnText}>Upload</Text>
-        </TouchableOpacity> */}
         {imageUri && <Image source={{ uri: imageUri }} style={styles.previewImage} />}
 
         <TouchableOpacity style={styles.statusBtn} onPress={handleStatusChange}>
@@ -127,7 +173,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#222',
-    marginTop: 20,
+    // marginTop: 20,
     marginBottom: 8,
   },
   card: {

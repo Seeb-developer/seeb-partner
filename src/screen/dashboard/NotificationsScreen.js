@@ -19,6 +19,7 @@ const NotificationsScreen = ({ navigation }) => {
     React.useCallback(() => {
       markAllAsRead(); // ✅ correct usage
       // optional: return cleanup if needed
+      
     }, [])
   );
 
@@ -72,7 +73,7 @@ const NotificationsScreen = ({ navigation }) => {
                 <View style={styles.content}>
                   <Text numberOfLines={1} style={styles.title}>{item.title}</Text>
                   <Text numberOfLines={2} style={styles.message}>{item.message}</Text>
-                  <Text style={styles.time}>{dayjs(item.time).fromNow()}</Text>
+                  <Text style={styles.time}>{dayjs(item.created_at).fromNow()}</Text>
                 </View>
               </View>
             )}

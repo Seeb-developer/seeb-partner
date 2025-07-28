@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     View,
     Text,
@@ -9,6 +9,7 @@ import {
     KeyboardAvoidingView,
     Platform,
     Image,
+    ActivityIndicator,
 } from 'react-native';
 import Navbar from '../../component/Navbar';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -16,61 +17,75 @@ import dayjs from 'dayjs';
 import ImagePicker from 'react-native-image-crop-picker';
 import Icon from 'react-native-vector-icons/Feather';
 import Modal from 'react-native-modal';
+import { getFirestore, collection, doc, addDoc, onSnapshot, query, orderBy, writeBatch, setDoc } from 'firebase/firestore';
+import { auth } from '../../../firebaseConfig';
 
-const mockTicket = {
-    id: 103,
-    category: 'Service Delay',
-    subject: 'Electrician not arrived',
-    status: 'open',
-    created_at: '2025-07-04T15:45:00',
-};
+import { serverTimestamp } from 'firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL, get, post } from '../../utils/api';
 
-const mockMessages = [
-    { id: 1, from: 'user', text: 'Hi, no one has come yet!', time: '2025-07-04T15:50:00' },
-    { id: 2, from: 'support', text: 'We’re checking this for you.', time: '2025-07-04T15:51:00' },
-    { id: 3, from: 'user', text: 'Please update fast.', time: '2025-07-04T15:53:00' },
-];
 
-const TicketChat = ({ navigation }) => {
-    const [messages, setMessages] = useState(mockMessages);
+// import firestore from '@react-native-firebase/firestore';
+// import auth from '@react-native-firebase/auth';
+
+
+const TicketChat = ({ navigation, route }) => {
+    const [ticket, setTicket] = useState(null);
+    const [messages, setMessages] = useState();
     const [input, setInput] = useState('');
     const [showActions, setShowActions] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [uploading, setUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const [ticketId, setTicketId] = useState('')
+
+    const [categories] = useState([
+        { label: 'App Issue', value: 'app' },
+        { label: 'Payment', value: 'payment' },
+        { label: 'Service Delay', value: 'delay' },
+        { label: 'Service Not Assigned', value: 'unassigned' },
+        { label: 'Customer Unavailable', value: 'customer_unavailable' },
+        { label: 'Material Requirement', value: 'material' },
+        { label: 'Address/Location Issue', value: 'location' },
+        { label: 'Document Verification', value: 'verification' },
+        { label: 'Task Cancellation', value: 'cancellation' },
+        { label: 'Other', value: 'other' },
+    ]);
+
+    const categoryMap = categories.reduce((acc, item) => {
+        acc[item.value] = item.label;
+        return acc;
+    }, {});
+
     const flatListRef = useRef();
 
-    const handleSend = () => {
-        if (!input.trim()) return;
-        const newMessage = {
-            id: Date.now(),
-            from: 'user',
-            text: input.trim(),
-            time: new Date().toISOString(),
-        };
-        setMessages([...messages, newMessage]);
-        setInput('');
-        setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
-    };
+    const id = route?.params?.ticketId || ""; // fallback if no param passed
 
-    const sendImageMessage = (uri) => {
-        const newMessage = {
-            id: Date.now(),
-            from: 'user',
-            text: '[Image]',
-            image: uri,
-            time: new Date().toISOString(),
+    useEffect(() => {
+        const fetchTicket = async () => {
+            try {
+                const res = await get(`ticket/${id}`);
+                console.log(res)
+                const { data } = res?.data
+                setTicket(data?.ticket);
+                setTicketId(data?.ticket?.ticket_uid)
+            } catch (err) {
+                console.error('❌ Failed to load ticket:', err);
+            }
         };
-        setMessages([...messages, newMessage]);
-        setShowActions(false);
-    };
+
+        fetchTicket();
+    }, [id]);
+
 
     const openCamera = async () => {
         try {
-             await new Promise((resolve) => setTimeout(resolve, 400)); 
-            const image = await ImagePicker.openCamera({
-                width: 800,
-                height: 800,
-                cropping: true,
-            });
-            sendImageMessage(image.path);
+            setTimeout(async () => {
+                const image = await ImagePicker.openCamera({ width: 800, height: 800, cropping: true });
+                setSelectedImage(image.path);
+            }, 400)
+
+            setShowActions(false);
         } catch (err) {
             setShowActions(false);
         }
@@ -78,48 +93,274 @@ const TicketChat = ({ navigation }) => {
 
     const openGallery = async () => {
         try {
-            const image = await ImagePicker.openPicker({
-                width: 800,
-                height: 800,
-                cropping: true,
-            });
-            sendImageMessage(image.path);
+            const image = await ImagePicker.openPicker({ width: 800, height: 800, cropping: true });
+            setSelectedImage(image.path);
+            setShowActions(false);
         } catch (err) {
             setShowActions(false);
         }
     };
 
-    const openDocument = async () => {
-        try {
-            const res = await DocumentPicker.pickSingle({
-                type: [DocumentPicker.types.allFiles],
+    const uploadImageToBackend = (uri, onProgress = () => { }) =>
+        new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+
+            xhr.open('POST', `${API_URL}tickets/upload-image`);
+
+            xhr.onload = () => {
+                if (xhr.status === 200 || xhr.status === 201) {
+                    try {
+                        const res = JSON.parse(xhr.responseText);
+                        // console.log('✅ Upload success:', res);
+                        resolve(res?.file_path || null);
+                    } catch (e) {
+                        reject(new Error('Invalid JSON response from server'));
+                    }
+                } else {
+                    reject(new Error(`Upload failed with status ${xhr.status}`));
+                }
+            };
+
+            xhr.onerror = () => reject(new Error('Upload failed due to network error'));
+
+            xhr.upload.onprogress = (event) => {
+                if (event.lengthComputable) {
+                    const progress = Math.round((event.loaded / event.total) * 100);
+                    onProgress(progress); // Use this in UI
+                }
+            };
+
+            const formData = new FormData();
+            formData.append('file', {
+                uri: Platform.OS === 'ios' && !uri.startsWith('file://') ? `file://${uri}` : uri,
+                name: 'chat-image.jpg',
+                type: 'image/jpeg',
             });
-            console.log('📄 Selected document:', res);
-        } catch (err) {
-            if (!DocumentPicker.isCancel(err)) {
-                console.error('❌ Document pick error:', err);
+
+            xhr.setRequestHeader('Accept', 'application/json');
+            xhr.send(formData);
+        });
+
+
+
+    const addMessageToFirestore = async () => {
+
+        const partnerJson = await AsyncStorage.getItem('partner');
+        const partner = partnerJson ? JSON.parse(partnerJson) : null;
+
+        const db = getFirestore();
+        const user = auth.currentUser;
+
+        if (!input.trim() && !selectedImage) return;
+
+        try {
+            setUploading(true);
+            let imageUrl = null;
+
+            if (selectedImage) {
+                imageUrl = await uploadImageToBackend(selectedImage);
             }
+
+            const messageData = {
+                user_id: user.uid,
+                ticket_id: id,
+                sender_id: partner?.id || null, // Replace with actual partner_id if stored
+                sender_type: 'partner',
+                message: input,
+                image: imageUrl,
+                timestamp: serverTimestamp(),
+                is_read_by_admin: false,
+                is_read_by_user: true,
+            };
+
+            await addDoc(collection(db, 'tickets', ticketId, 'messages'), messageData);
+
+            // 2. Add message to Backend
+            const backendPayload = {
+                ticket_id: id,
+                sender_id: partner?.id,
+                sender_type: 'partner',
+                message: input,
+                file: imageUrl, // if imageUrl is from backend already, this will be valid
+            };
+
+           const res =await post('ticket/add-message', backendPayload);
+           console.log("tickect save in data base", res)
+
+            setSelectedImage(null);
+            setInput('');
+            setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 100);
+        } catch (err) {
+            console.error('❌ Image upload/send failed:', err);
+        } finally {
+            setUploading(false);
         }
     };
 
+    const unreadMessageIdsRef = useRef([]);
+
+    useEffect(() => {
+        if (!ticketId) return; // 🛑 Do nothing until ticketId is ready
+
+        const db = getFirestore();
+        const user = auth.currentUser;
+
+        const ticketRef = doc(db, 'tickets', ticketId);
+        const messagesRef = collection(ticketRef, 'messages');
+        const messagesQuery = query(messagesRef, orderBy('timestamp', 'asc'));
+
+        const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
+            const newMessages = snapshot.docs.map((docSnap) => {
+                const data = docSnap.data();
+
+                if (data.sender_type === 'admin' && !data.is_read_by_user) {
+                    unreadMessageIdsRef.current.push(docSnap.id);
+                }
+
+                return {
+                    id: docSnap.id,
+                    ...data,
+                    isNew: data.sender_type === 'admin' && !data.is_read_by_user,
+                };
+            });
+
+            setMessages(newMessages);
+            setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 200);
+        });
+
+        return () => unsubscribe();
+    }, [ticketId]);
+
+
+    // useEffect(() => {
+    //     const unsubscribe = navigation.addListener('beforeRemove', async () => {
+    //         const db = getFirestore();
+    //         const batch = writeBatch(db);
+
+    //         unreadMessageIdsRef.current.forEach((msgId) => {
+    //             const msgRef = doc(db, 'tickets', ticketId, 'messages', msgId);
+    //             batch.update(msgRef, { is_read_by_user: true });
+    //         });
+
+    //         try {
+    //             if (unreadMessageIdsRef.current.length > 0) {
+    //                 await batch.commit();
+
+    //                 await post('ticket/mark-as-read', { 
+    //                     ticket_id: id,
+    //                     viewer_type: 'partner',
+    //                 });
+    //                 console.log('✅ Marked unread messages as read');
+    //                 unreadMessageIdsRef.current = [];
+    //             }
+    //         } catch (err) {
+    //             console.error('🔥 Failed to mark messages as read:', err);
+    //         }
+    //     });
+
+    //     return unsubscribe;
+    // }, [navigation]);
+
+
+    const updateTypingStatus = async (isTyping) => {
+
+        const db = getFirestore();
+        const partnerJson = await AsyncStorage.getItem('partner');
+        const partner = partnerJson ? JSON.parse(partnerJson) : null;
+
+        if (!partner?.id) {
+            console.warn('❌ No partner ID found');
+            return;
+        }
+
+        try {
+            const typingRef = doc(db, 'tickets', ticketId, 'typing_status', 'partner');
+            await setDoc(typingRef, {
+                typing: isTyping,
+                updated_at: serverTimestamp(),
+            });
+            console.log('✅ Typing status updated');
+        } catch (err) {
+            console.error('🔥 Failed to update typing status:', err);
+        }
+    };
+
+
+
+    const [adminTyping, setAdminTyping] = useState(false);
+
+    useEffect(() => {
+        if (!ticketId) return;
+        const db = getFirestore();
+        const typingRef = doc(db, 'tickets', ticketId, 'typing_status', 'admin');
+
+        const unsubscribe = onSnapshot(typingRef, (docSnap) => {
+            if (docSnap.exists()) {
+                setAdminTyping(docSnap.data().typing);
+            }
+        });
+
+        return unsubscribe;
+    }, [ticketId]);
+
+    const typingTimeoutRef = useRef(null);
+    const isTypingRef = useRef(false); // 👈 tracks if typing is already true
+
+    const displayMessages = adminTyping
+        ? [...(messages || []), {
+            id: 'typing',
+            sender_type: 'admin',
+            message: 'typing...',
+            timestamp: new Date(),
+            is_typing: true,
+        }]
+        : messages || [];
+
+
     const renderMessage = ({ item }) => {
-        const isUser = item.from === 'user';
+        const isUser = item.sender_type === 'partner';
+        const bubbleStyle = isUser
+            ? styles.userBubble
+            : [styles.supportBubble, item.isNew && styles.newAdminBubble];
+
+        const isTypingMessage = item.is_typing;
+
         return (
-            <View style={[styles.messageBubble, isUser ? styles.userBubble : styles.supportBubble]}>
-                {item.image && (
-                    <Image
-                        source={{ uri: item.image }}
-                        style={{ width: 180, height: 180, borderRadius: 8, marginBottom: 6 }}
-                        resizeMode='contain'
-                    />
+            <View style={[styles.messageBubble, bubbleStyle]}>
+                {isTypingMessage ? (
+                    <Text style={[styles.messageText, { fontStyle: 'italic', color: '#999' }]}>
+                        typing....
+                    </Text>
+                ) : (
+                    <>
+                        {item.image && (
+                            <Image
+                                source={{ uri: API_URL + item.image }}
+                                style={{ width: 180, height: 180, borderRadius: 8, marginBottom: 6 }}
+                                resizeMode='contain'
+                            />
+                        )}
+                        {item.message && (
+                            <Text style={styles.messageText}>{item.message}</Text>
+                        )}
+                        <Text style={styles.messageTime}>
+                            {dayjs(item.timestamp?.toDate?.() || item.timestamp).format('DD MMM YYYY, hh:mm A')}
+                        </Text>
+                    </>
                 )}
-                <Text style={styles.messageText}>{item.text}</Text>
-                <Text style={styles.messageTime}>
-                    {dayjs(item.time).format('DD MMM YYYY, hh:mm A')}
-                </Text>
             </View>
         );
     };
+
+
+    if (!ticket) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color="#FF9800" />
+                <Text style={{ padding: 20, color: '#555' }}>Loading ticket details...</Text>
+            </View>
+        );
+    }
 
     return (
         <KeyboardAvoidingView
@@ -128,25 +369,26 @@ const TicketChat = ({ navigation }) => {
             keyboardVerticalOffset={50}
         >
             <View style={styles.container}>
-                <Navbar title={`Ticket #${mockTicket.id}`} onBack={() => navigation.goBack()} />
+                <Navbar title={`Ticket #${ticket?.ticket_uid}`} onBack={() => navigation.goBack()} />
 
                 <View style={styles.ticketDetails}>
-                    <Text style={styles.subject}>{mockTicket.subject}</Text>
-                    <Text style={styles.meta}>Category: {mockTicket.category}</Text>
-                    <Text style={styles.meta}>Status: {mockTicket.status.toUpperCase()}</Text>
+                    <Text style={styles.subject}>{ticket?.subject}</Text>
+                    <Text style={styles.meta}>Category: {categoryMap[ticket?.category] || ticket?.category}</Text>
+                    <Text style={styles.meta}>Status: {ticket?.status?.toUpperCase()}</Text>
                     <Text style={styles.meta}>
-                        Created: {dayjs(mockTicket.created_at).format('D MMM YYYY, hh:mm A')}
+                        Created: {dayjs(ticket?.created_at).format('D MMM YYYY, hh:mm A')}
                     </Text>
-                </View>
 
+                </View>
                 <FlatList
                     ref={flatListRef}
-                    data={messages}
+                    data={displayMessages}
                     keyExtractor={(item) => item.id.toString()}
                     renderItem={renderMessage}
                     contentContainerStyle={styles.messageList}
                     onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
                 />
+
 
                 {/* <View style={{ position: 'relative' }}>
                     {showActions && (
@@ -166,6 +408,30 @@ const TicketChat = ({ navigation }) => {
                         </View>
                     )}
                 </View> */}
+                {selectedImage && (
+                    <View style={styles.previewBubble}>
+                        <Image
+                            source={{ uri: selectedImage }}
+                            style={styles.previewImage}
+                            resizeMode="cover"
+                        />
+
+                        {uploading && (
+                            <View style={styles.uploadOverlay}>
+                                <View style={styles.progressContainer}>
+                                    <View style={[styles.progressBar, { width: `${uploadProgress}%` }]} />
+                                </View>
+                                <Text style={styles.progressText}>{uploadProgress}%</Text>
+                            </View>
+                        )}
+
+                        {!uploading && (
+                            <TouchableOpacity onPress={() => setSelectedImage(null)} style={styles.removePreviewBtn}>
+                                <Ionicons name="close" size={18} color="#fff" />
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                )}
                 <View style={styles.inputRow}>
                     <TouchableOpacity onPress={() => setShowActions(!showActions)} style={styles.attachmentButton}>
                         <Ionicons name="attach" size={22} color="#555" />
@@ -174,42 +440,64 @@ const TicketChat = ({ navigation }) => {
                     <TextInput
                         style={styles.input}
                         value={input}
-                        onChangeText={setInput}
+                        onChangeText={(text) => {
+                            setInput(text);
+
+                            // Start typing only once
+                            if (!isTypingRef.current && text.length > 0) {
+                                updateTypingStatus(true);
+                                isTypingRef.current = true;
+                            }
+
+                            // Clear previous timeout
+                            if (typingTimeoutRef.current) {
+                                clearTimeout(typingTimeoutRef.current);
+                            }
+
+                            // Stop typing after 2s of inactivity
+                            typingTimeoutRef.current = setTimeout(() => {
+                                updateTypingStatus(false);
+                                isTypingRef.current = false;
+                            }, 2000);
+                        }}
                         placeholder="Type a message..."
                         placeholderTextColor="#999"
+                        onFocus={() => {
+                            setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 300);
+                        }}
                     />
 
-                    <TouchableOpacity onPress={handleSend} style={styles.sendButton}>
+                    <TouchableOpacity onPress={addMessageToFirestore} style={styles.sendButton}>
                         <Ionicons name="send" size={20} color="#fff" />
                     </TouchableOpacity>
-                <Modal
-                    isVisible={showActions}
-                    onBackdropPress={() => setShowActions(!showActions)}
-                    style={{ justifyContent: 'flex-end', margin: 0 }}
-                >
-                    <View style={styles.bottomSheet}>
-                        <View style={styles.sheetHeader}>
-                            <Text style={styles.sheetTitle}>Upload Document</Text>
-                            <TouchableOpacity onPress={() => setShowActions(!showActions)}>
-                                <Text style={styles.cancelText}>Cancel</Text>
-                            </TouchableOpacity>
-                        </View>
+                    <Modal
+                        isVisible={showActions}
+                        onBackdropPress={() => setShowActions(!showActions)}
+                        style={{ justifyContent: 'flex-end', margin: 0 }}
+                    >
+                        <View style={styles.bottomSheet}>
+                            <View style={styles.sheetHeader}>
+                                <Text style={styles.sheetTitle}>Upload Document</Text>
+                                <TouchableOpacity onPress={() => setShowActions(!showActions)}>
+                                    <Text style={styles.cancelText}>Cancel</Text>
+                                </TouchableOpacity>
+                            </View>
 
-                        <View style={styles.optionRow}>
-                            <TouchableOpacity style={styles.optionBox} onPress={() => {
-                                setShowActions(!showActions)
-                                openCamera()
-                            }}>
-                                <Icon name="camera" size={24} color="#2F6DFB" />
-                                <Text style={styles.optionLabel}>Camera</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.optionBox} onPress={openGallery}>
-                                <Icon name="image" size={24} color="#2F6DFB" />
-                                <Text style={styles.optionLabel}>Gallery</Text>
-                            </TouchableOpacity>
+                            <View style={styles.optionRow}>
+                                <TouchableOpacity style={styles.optionBox} onPress={() => {
+                                    setShowActions(!showActions)
+                                    openCamera()
+                                }}>
+                                    <Icon name="camera" size={24} color="#2F6DFB" />
+                                    <Text style={styles.optionLabel}>Camera</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={styles.optionBox} onPress={openGallery}>
+                                    <Icon name="image" size={24} color="#2F6DFB" />
+                                    <Text style={styles.optionLabel}>Gallery</Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
-                    </View>
-                </Modal>
+                    </Modal>
                 </View>
             </View>
         </KeyboardAvoidingView>
@@ -311,8 +599,6 @@ const styles = StyleSheet.create({
         fontSize: 14,
         marginLeft: 8,
     },
-
-
     bottomSheet: {
         backgroundColor: '#fff',
         padding: 20,
@@ -344,7 +630,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-around',
         marginBottom: 20
     },
-
     optionBox: {
         alignItems: 'center',
         padding: 14,
@@ -361,6 +646,66 @@ const styles = StyleSheet.create({
         color: '#333',
         fontWeight: '500',
     },
+    previewBubble: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginHorizontal: 12,
+        marginBottom: 6,
+        padding: 6,
+        backgroundColor: '#f0f0f0',
+        borderRadius: 10,
+        alignSelf: 'flex-start',
+        maxWidth: '70%',
+        position: 'relative',
+    },
+
+    previewImage: {
+        width: 70,
+        height: 70,
+        borderRadius: 6,
+    },
+
+    removePreviewBtn: {
+        position: 'absolute',
+        top: -8,
+        right: -8,
+        backgroundColor: '#ff4d4d',
+        borderRadius: 12,
+        padding: 2,
+    },
+    uploadOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.4)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 8,
+    },
+
+    progressContainer: {
+        width: '80%',
+        height: 6,
+        backgroundColor: '#ccc',
+        borderRadius: 4,
+        overflow: 'hidden',
+        marginBottom: 6,
+    },
+
+    progressBar: {
+        height: 6,
+        backgroundColor: '#FF9800',
+    },
+
+    progressText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '500',
+    },
+    newAdminBubble: {
+        borderColor: '#FF9800',
+        borderWidth: 1.5,
+    },
+
+
 });
 
 export default TicketChat;

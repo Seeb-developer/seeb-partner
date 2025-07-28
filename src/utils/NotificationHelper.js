@@ -1,7 +1,7 @@
 // src/utils/NotificationHelper.js
 
 import messaging from '@react-native-firebase/messaging';
-import notifee, { AndroidImportance, EventType } from '@notifee/react-native';
+import notifee, { AndroidImportance, AndroidStyle, EventType } from '@notifee/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert, PermissionsAndroid, Platform } from 'react-native';
 
@@ -54,11 +54,88 @@ export async function registerFCMToken() {
   }
 }
 
-/** 🔔 Show Notifee notification manually */
+export function setupNotificationListeners(navigation) {
+  // 1. Foreground message
+  messaging().onMessage(async message => {
+    console.log('📥 Foreground message:', message);
+
+    const { screen, id, title, body } = message.data || {};
+
+    // Get current route name
+    const currentRoute = navigation.getCurrentRoute?.()?.name;
+
+    // If on TicketChat screen and same ticketId, skip notification
+    if (screen === 'TicketChat' && currentRoute === 'TicketChat') {
+      console.log('🟡 Already on TicketChat — skipping notification');
+      return;
+    }
+    if (screen === 'booking_assignment') {
+      console.log('🟡 Already on Home — skipping notification');
+      return;
+    }
+
+    // Otherwise show notification
+    await displayNotification(message);
+  });
+
+  // 2. When user taps a notification while app is in background
+  messaging().onNotificationOpenedApp(message => {
+    console.log('📲 Opened from background:', message?.data);
+    const { screen, id } = message.data || {};
+    if (screen === 'TicketChat' && id) {
+      navigation.navigate('TicketChat', { ticketId: id });
+    }
+  });
+
+  // 3. When app launches from quit state due to tap
+  messaging()
+    .getInitialNotification()
+    .then(message => {
+      if (message) {
+        console.log('🛑 Opened from quit:', message?.data);
+        const { screen, id } = message.data || {};
+        if (screen === 'TicketChat' && id) {
+          navigation.navigate('TicketChat', { ticketId: id });
+        }
+      }
+    });
+
+  // 4. Notifee tap while app in foreground
+  notifee.onForegroundEvent(({ type, detail }) => {
+    if (type === EventType.PRESS) {
+      const { screen, id } = detail.notification?.data || {};
+      console.log('👆 Notifee foreground press:', detail.notification?.data);
+      if (screen === 'TicketChat' && id) {
+        navigation.navigate('TicketChat', { ticketId: id });
+      }
+    }
+  });
+}
+
+/** 🛠 Background message handler (in index.js) */
+export const backgroundMessageHandler = async remoteMessage => {
+  console.log('📤 Background message:', remoteMessage);
+
+  const { title, body, screen } = remoteMessage.data || remoteMessage.notification || {};
+
+  // 👇 Only show sticky booking notification if screen === 'booking'
+  if (screen === 'booking_assignment') {
+    await displayStickyBookingNotification(remoteMessage.data);
+  } else {
+    await displayNotification(remoteMessage);
+  }
+
+
+  const existing = await AsyncStorage.getItem('notifications');
+  const parsed = existing ? JSON.parse(existing) : [];
+  
+};
+
+
 export async function displayNotification(remoteMessage) {
-  // Alert.alert('New Notification')
   try {
-    const { title, body } = remoteMessage.notification || remoteMessage.data || {};
+    const { title, body, image, screen, id } =
+      remoteMessage.data || remoteMessage.notification || {};
 
     const channelId = await notifee.createChannel({
       id: 'default',
@@ -75,111 +152,55 @@ export async function displayNotification(remoteMessage) {
         sound: 'default',
         pressAction: { id: 'default' },
         smallIcon: 'ic_launcher',
+        style: {
+          type: AndroidStyle.BIGPICTURE,
+          picture: image || 'https://example.com/default-image.png', // Fallback image
+        },
       },
       ios: {
         sound: 'default',
       },
+      data: remoteMessage.data || {}, // important for onForegroundEvent
     });
   } catch (err) {
     console.error('❌ displayNotification error:', err);
   }
 }
 
-/** 📥 Setup notification listeners */
-export function setupNotificationListeners(navigation, addNotification) {
-  // console.log
-  // Foreground message
-  messaging().onMessage(async message => {
-    console.log('📥 Foreground:', message);
 
-    const isFromFirebaseConsole =
-      Platform.OS === 'android' && message.notification ||
-      Platform.OS === 'ios' && message.notification;
-
-    if (!isFromFirebaseConsole) {
-    }
-    await displayNotification(message);
-
-    const { title, body } = message.notification || message.data || {};
-    if (addNotification) {
-      await addNotification({
-        id: Date.now(),
-        title,
-        message: body,
-        time: new Date().toISOString(),
-        icon: 'notifications-outline',
-        read: false,
-      });
-    }
+export async function displayStickyBookingNotification(data) {
+  const channelId = await notifee.createChannel({
+    id: 'seeb-booking',
+    name: 'Booking Alerts',
+    importance: AndroidImportance.HIGH,
+    sound: 'notificationsound', // must match filename (without extension)
   });
 
+  await notifee.displayNotification({
+    title: '🚨 New Booking Request!',
+    body: data.body || 'Accept the job before it expires.',
+    android: {
+      channelId,
+      sound: 'notificationsound',
+      pressAction: { id: 'default' },
+      smallIcon: 'ic_launcher',
+      ongoing: true,
+      autoCancel: false,
+    },
+    ios: {
+      // sound: 'notificationsound.mp3',
+      foregroundPresentationOptions: ['badge', 'sound'],
 
-  // App opened from background state
-  messaging().onNotificationOpenedApp(async message => {
-    console.log('📲 From background:', message?.notification);
-    await displayNotification(message.notification)
-    const { title, body } = message.notification || message.data || {};
-    if (addNotification) {
-      await addNotification({
-        id: Date.now(),
-        title,
-        message: body,
-        time: new Date().toISOString(),
-        icon: 'notifications-outline',
-        read: false,
-      });
-    }
-  });
-
-  // App opened from quit state
-  messaging()
-    .getInitialNotification()
-    .then(async message => {
-      if (message) {
-        console.log('🛑 From quit state:', message?.notification);
-        const { title, body } = message.notification || message.data || {};
-        if (addNotification) {
-          await addNotification({
-            id: Date.now(),
-            title,
-            message: body,
-            time: new Date().toISOString(),
-            icon: 'notifications-outline',
-            read: false,
-          });
-        }
-      }
-    });
-
-  // Notification press inside app (foreground)
-  notifee.onForegroundEvent(({ type, detail }) => {
-    if (type === EventType.PRESS) {
-      console.log('👆 Notification pressed:', detail.notification);
-      // Optional: navigation logic
-    }
+    },
+    data,
   });
 }
 
-/** 🛠 Background message handler (in index.js) */
-export const backgroundMessageHandler = async remoteMessage => {
-  console.log('📤 Background message:', remoteMessage);
-
-  const { title, body } = remoteMessage.data || remoteMessage.notification || {};
-
-  await displayNotification(remoteMessage);
-
-  const existing = await AsyncStorage.getItem('notifications');
-  const parsed = existing ? JSON.parse(existing) : [];
-
-  const newNotification = {
-    id: Date.now(),
-    title: title || 'Seeb Notification',
-    message: body || 'You got a new message!',
-    time: new Date().toISOString(),
-    icon: 'notifications-outline',
-    read: false,
-  };
-
-  await AsyncStorage.setItem('notifications', JSON.stringify([newNotification, ...parsed]));
-};
-
+export async function clearNotifications() {
+  try {
+    await notifee.cancelAllNotifications();
+    console.log('✅ All notifications cleared');
+  } catch (err) {
+    console.error('❌ Error clearing notifications:', err);
+  }
+}

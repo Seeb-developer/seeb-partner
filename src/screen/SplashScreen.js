@@ -1,6 +1,14 @@
 import React, { useEffect } from 'react';
 import { View, ActivityIndicator, StyleSheet, Image, Text } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    onAuthStateChanged,
+} from 'firebase/auth';
+import { auth } from '../../firebaseConfig';
+import Toast from 'react-native-toast-message';
+import { post } from '../utils/api';
 
 const SplashScreen = ({ navigation }) => {
     useEffect(() => {
@@ -31,7 +39,53 @@ const SplashScreen = ({ navigation }) => {
 
                     switch (status) {
                         case 'active':
-                            navigation.replace('DashboardStack');
+
+                            const email = `partner_${partner.id}@seeb.in`;
+                            const password = 'seeb@chat123';
+
+                            try {
+                                await createUserWithEmailAndPassword(auth, email, password);
+                                console.log('✅ Firebase user registered');
+                            } catch (err) {
+                                if (err.code === 'auth/email-already-in-use') {
+                                    try {
+                                        await signInWithEmailAndPassword(auth, email, password);
+                                        console.log('✅ Firebase user logged in');
+                                    } catch (loginErr) {
+                                        console.error('❌ Firebase login failed:', loginErr.code, loginErr.message);
+                                    }
+                                } else {
+                                    console.error('❌ Firebase registration failed:', err.code, err.message);
+                                }
+                            }
+
+                            onAuthStateChanged(auth, async (user) => {
+                                if (user) {
+                                    console.log('✅ Firebase user UID:', user.uid);
+                                    await AsyncStorage.setItem('firebase_uid', user.uid);
+
+
+                                    const payload = {
+                                        partner_id: partner.id,
+                                        firebase_uid: user.uid,
+                                    };
+
+                                    try {
+                                        const res = await post('store-firebase-uid', payload);
+                                        console.log(res.data);
+                                        
+                                        // Navigate to DashboardStack after successful login
+                                    } catch (err) {
+                                        // Toast.show({ type: 'error', text1: 'Failed to store Firebase UID' + err });
+                                        console.error('Error submitting ticket:', err);
+                                    }
+                                    navigation.replace('DashboardStack');
+                                } else {
+                                    console.log('❌ Firebase user not ready yet');
+                                }
+                            });
+
+
                             // if (onboardingStatus === 'true') {
                             // } else {
                             //     navigation.replace('PendingVerificationScreen', { partner_id: partner.id });

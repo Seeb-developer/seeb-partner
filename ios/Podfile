@@ -14,6 +14,8 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
+use_frameworks! :linkage => :static
+
 target 'SeebPartner' do
   config = use_native_modules!
 
@@ -24,11 +26,15 @@ target 'SeebPartner' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
-
+  pod 'FirebaseAuth', :modular_headers => true
+  pod 'FirebaseFirestore', :modular_headers => true
   # ✅ Only apply modular headers to GoogleUtilities if needed
   pod 'GoogleUtilities', :modular_headers => true
   pod 'FirebaseCore', :modular_headers => true
   pod 'FirebaseCoreInternal', :modular_headers => true
+  pod 'FirebaseCoreExtension', :modular_headers => true
+  pod 'FirebaseAuthInterop', :modular_headers => true
+  pod 'RecaptchaInterop', :modular_headers => true
   # pod 'RNCPushNotificationIOS', :path => '../node_modules/@react-native-community/push-notification-ios'
 
 

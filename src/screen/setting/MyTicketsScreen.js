@@ -6,63 +6,83 @@ import {
   TouchableOpacity,
   StyleSheet,
   RefreshControl,
+  Image,
 } from 'react-native';
 import dayjs from 'dayjs';
 import Navbar from '../../component/Navbar';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { get } from '../../utils/api';
 
 const STATUS_TABS = ['open', 'in_progress', 'closed'];
-
-const TICKETS = [
-  {
-    id: 101,
-    category: 'Payment',
-    subject: 'Amount not credited',
-    status: 'open',
-    created_at: '2025-07-08T12:34:56',
-  },
-  {
-    id: 102,
-    category: 'App Issue',
-    subject: 'App crashing on login',
-    status: 'in_progress',
-    created_at: '2025-07-06T09:12:22',
-  },
-  {
-    id: 103,
-    category: 'Service Delay',
-    subject: 'Electrician not arrived',
-    status: 'closed',
-    created_at: '2025-07-04T15:45:00',
-  },
-];
 
 const MyTicketsScreen = ({ navigation }) => {
   const [status, setStatus] = useState('open');
   const [refreshing, setRefreshing] = useState(false);
   const [filtered, setFiltered] = useState({});
+  const [tickets, setTickets] = useState([]);
+  const [categories] = useState([
+    { label: 'App Issue', value: 'app' },
+    { label: 'Payment', value: 'payment' },
+    { label: 'Service Delay', value: 'delay' },
+    { label: 'Service Not Assigned', value: 'unassigned' },
+    { label: 'Customer Unavailable', value: 'customer_unavailable' },
+    { label: 'Material Requirement', value: 'material' },
+    { label: 'Address/Location Issue', value: 'location' },
+    { label: 'Document Verification', value: 'verification' },
+    { label: 'Task Cancellation', value: 'cancellation' },
+    { label: 'Other', value: 'other' },
+  ]);
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    setTimeout(() => {
-      filterTickets(status);
+  const fetchTickets = async () => {
+    try {
+      setRefreshing(true);
+      const partnerJson = await AsyncStorage.getItem('partner');
+      const partner = partnerJson ? JSON.parse(partnerJson) : null;
+
+      if (!partner?.id) return;
+
+      const res = await get(`tickets/partner/${partner.id}`);
+      setTickets(res.data?.data || []);
+    } catch (err) {
+      console.error('❌ Failed to fetch tickets:', err);
+    } finally {
       setRefreshing(false);
-    }, 800);
+    }
   };
 
-  const filterTickets = (status) => {
-    const filteredTickets = TICKETS.filter((t) => t.status === status);
+
+  useEffect(() => {
+    fetchTickets();
+  }, []);
+
+  const categoryMap = categories.reduce((acc, item) => {
+    acc[item.value] = item.label;
+    return acc;
+  }, {});
+
+
+  useEffect(() => {
+    const filteredTickets = tickets.filter((t) => t.status === status);
+
     const grouped = filteredTickets.reduce((acc, ticket) => {
       const date = dayjs(ticket.created_at).format('YYYY-MM-DD');
       if (!acc[date]) acc[date] = [];
       acc[date].push(ticket);
       return acc;
     }, {});
+
     setFiltered(grouped);
+  }, [status, tickets]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    setTimeout(() => {
+      fetchTickets(status);
+      setRefreshing(false);
+    }, 800);
   };
 
-  useEffect(() => {
-    filterTickets(status);
-  }, [status]);
+
 
   const renderTicket = ({ item }) => (
     <TouchableOpacity
@@ -71,10 +91,22 @@ const MyTicketsScreen = ({ navigation }) => {
     >
       <View style={styles.row}>
         <Text style={styles.ticketTitle}>{item.subject}</Text>
-        <Text style={styles.ticketStatus}>{item.status}</Text>
+        <Text style={styles.ticketStatus}>
+          {item?.status
+            .split('_')
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ')}
+        </Text>
       </View>
-      <Text style={styles.ticketMessage}>{item.category}</Text>
+      <Text style={styles.ticketMessage}>{categoryMap[item.category] || item.category}</Text>
       <Text style={styles.ticketTime}>{dayjs(item.created_at).format('hh:mm A')}</Text>
+      {item.attachment && (
+        <Image
+          source={{ uri: item.attachment }}
+          style={{ height: 100, width: '100%', marginTop: 8, borderRadius: 8 }}
+          resizeMode="cover"
+        />
+      )}
     </TouchableOpacity>
   );
 

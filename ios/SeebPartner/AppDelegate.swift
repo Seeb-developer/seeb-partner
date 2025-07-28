@@ -4,7 +4,6 @@ import React_RCTAppDelegate
 import ReactAppDependencyProvider
 import FirebaseCore // ✅ Add this
 import UserNotifications
-//import RNCPushNotificationIOS
 import react_native_ota_hot_update
 
 @main

@@ -18,7 +18,8 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { OnboardingProvider } from './src/context/OnboardingContext';
 import { notificationListener, requestUserPermission, setupNotificationListeners } from './src/utils/NotificationHelper';
 import { NotificationContext, NotificationProvider } from './src/context/NotificationContext';
-
+import { useNavigation } from '@react-navigation/native';
+import notifee from '@notifee/react-native';
 const App = () => {
 
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -26,6 +27,7 @@ const App = () => {
   const [currentVersion, setCurrentVersion] = useState(null);
   const [remoteVersion, setRemoteVersion] = useState(null);
   const [updateUrl, setUpdateUrl] = useState(null);
+    //  const { addNotification, refreshNotifications } = useContext(NotificationContext);
 
   useEffect(() => {
     requestUserPermission();
@@ -33,7 +35,9 @@ const App = () => {
   }, []);
 
   useEffect(() => {
+    
     const checkVersion = async () => {
+      // await notifee.setBadgeCount(0); // Reset badge count on app start
       try {
         setChecking(true);
         const version = DeviceInfo.getVersion();
@@ -83,27 +87,16 @@ const App = () => {
   };
 
 
-  const AppInner = () => {
-    const { addNotification, refreshNotifications } = useContext(NotificationContext);
-
-    useEffect(() => {
-      refreshNotifications()
-      setupNotificationListeners(null, addNotification);
-    }, []);
-
-    return (
-      <>
-        <NavigationStack />
-      </>
-    );
-  };
-
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
         <NotificationProvider>
           <OnboardingProvider>
-            <AppInner />
+            <NavigationStack
+              onReady={(navigationRef) => {
+                setupNotificationListeners(navigationRef);
+              }}
+            />
           </OnboardingProvider>
         </NotificationProvider>
 

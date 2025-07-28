@@ -98,9 +98,17 @@ function DrawerMenu() {
         </Drawer.Navigator>
     );
 }
-const NavigationStack = () => {
+const NavigationStack = ({onReady}) => {
+      const navigationRef = React.useRef();
     return (
-        <NavigationContainer>
+        <NavigationContainer
+            ref={navigationRef}
+            onReady={() => {
+                if (onReady) {
+                    onReady(navigationRef.current);
+                }
+            }}
+        >
             <Stack.Navigator screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="Splash" component={SplashScreen} />
                 <Stack.Screen name="Onboarding" component={OnboardingScreen} />
