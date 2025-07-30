@@ -42,6 +42,9 @@ import RaiseTicketScreen from '../screen/setting/RaiseTicketScreen';
 import TicketChat from '../screen/setting/TicketChat';
 import MyTicketsScreen from '../screen/setting/MyTicketsScreen';
 import FAQScreen from '../screen/setting/FAQScreen';
+import Payout from '../screen/dashboard/Payout';
+import ReferralScreen from '../screen/dashboard/ReferralScreen';
+import InvitePartnerScreen from '../screen/dashboard/InvitePartnerScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -92,14 +95,30 @@ function DrawerMenu() {
             <Drawer.Screen name="Notification" component={NotificationsScreen} />
             <Drawer.Screen name="Training" component={TrainingScreen} />
             <Drawer.Screen name="Settings" component={SettingsScreen} />
-            <Drawer.Screen name="Payments" component={ComingSoonScreen} />
-            <Drawer.Screen name="Refer" component={ComingSoonScreen} />
+            <Drawer.Screen name="Payments" component={Payout} />
+            <Drawer.Screen name="Refer" component={ReferralScreen} />
 
         </Drawer.Navigator>
     );
 }
-const NavigationStack = ({onReady}) => {
-      const navigationRef = React.useRef();
+
+const linking = {
+    prefixes: ['https://seeb.in'],
+    config: {
+        screens: {
+            Step1_Mobile: {
+                path: 'referral/partner',
+                parse: {
+                    ref: (ref) => ref,
+                },
+            },
+        },
+    },
+};
+
+
+const NavigationStack = ({ onReady }) => {
+    const navigationRef = React.useRef();
     return (
         <NavigationContainer
             ref={navigationRef}
@@ -108,6 +127,8 @@ const NavigationStack = ({onReady}) => {
                     onReady(navigationRef.current);
                 }
             }}
+            linking={linking}
+            fallback={<Text>Loading...</Text>}
         >
             <Stack.Navigator screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="Splash" component={SplashScreen} />
@@ -149,6 +170,9 @@ const NavigationStack = ({onReady}) => {
                 <Stack.Screen name="TicketChat" component={TicketChat} />
                 <Stack.Screen name="MyTickets" component={MyTicketsScreen} />
                 <Stack.Screen name="FAQ" component={FAQScreen} />
+
+
+                <Stack.Screen name="InvitePartnerScreen" component={InvitePartnerScreen} />
 
 
             </Stack.Navigator>

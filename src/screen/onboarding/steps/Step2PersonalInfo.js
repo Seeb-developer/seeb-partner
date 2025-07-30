@@ -15,8 +15,10 @@ import Icon from 'react-native-vector-icons/Feather';
 import DropDownPicker from 'react-native-dropdown-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { OnboardingContext } from '../../../context/OnboardingContext';
+import { get } from '../../../utils/api';
 
-const Step2PersonalInfo = ({ navigation }) => {
+const Step2PersonalInfo = ({ navigation, route }) => {
+  const { mobile } = route?.params || {};
   const [form, setForm] = useState({
     fullName: '',
     dob: '',
@@ -26,8 +28,10 @@ const Step2PersonalInfo = ({ navigation }) => {
     aadhaar: '',
     pan: '',
     emergencyContact: '',
+    referralCode: '',
+    referrer_id: '',
   });
-
+  const [referralDisabled, setReferralDisabled] = useState(false);
   const [errors, setErrors] = useState({});
   const [dobPickerVisible, setDobPickerVisible] = useState(false);
   const [focusedField, setFocusedField] = useState('');
@@ -61,7 +65,7 @@ const Step2PersonalInfo = ({ navigation }) => {
 
   const formatPAN = (val) => val.toUpperCase();
 
-  const validateField = (key, value) => {
+  const validateField = async (key, value) => {
     let message = '';
 
     if (key === 'fullName') {
@@ -100,11 +104,32 @@ const Step2PersonalInfo = ({ navigation }) => {
       if (!value) message = "Mobile Number is required"
       else if (digits && digits.length !== 10) message = 'Enter a valid 10-digit number';
     }
+    if (key === 'referralCode' && value && value.length < 4) {
+      message = 'Referral Code is too short';
+    }
+
+    if (key === 'referralCode' && value.length >= 4) {
+      try {
+        const result = await get(`referral/validate?code=${value}`);
+        console.log('Referral validation result:', result.data);
+
+        if (!result.data.valid) {
+          setForm((prev) => ({ ...prev, referrer_id: '' }));
+          message = 'Invalid or expired referral code';
+        } else if (result.data.referrer_id) {
+          setForm((prev) => ({ ...prev, referrer_id: result.data.referrer_id }));
+        }
+      } catch (err) {
+        console.log('Referral validation error:', err);
+        message = 'Error validating referral code';
+      }
+    }
+    console.log('Validating field:', key, 'Value:', value, 'Message:', message);
 
     setErrors((prev) => ({ ...prev, [key]: message }));
   };
 
-  const handleChange = (key, val) => {
+  const handleChange = async (key, val) => {
     let updated = val;
 
     if (key === 'fullName') {
@@ -122,6 +147,7 @@ const Step2PersonalInfo = ({ navigation }) => {
     if (key === 'emergencyContact') {
       updated = val.replace(/\D/g, '');
     }
+
 
     setForm((prev) => ({ ...prev, [key]: updated }));
     validateField(key, updated);
@@ -214,6 +240,17 @@ const Step2PersonalInfo = ({ navigation }) => {
         else if (digits.length !== 10) message = 'Enter a valid 10-digit number';
       }
 
+      if (key === 'email' && value) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) {
+          message = 'Enter a valid email address';
+        }
+      }
+
+      if (key === 'referralCode' && value && value.length < 4) {
+        message = 'Referral Code is too short';
+      }
+
+
       if (message) {
         newErrors[key] = message;
         hasError = true;
@@ -237,6 +274,7 @@ const Step2PersonalInfo = ({ navigation }) => {
   };
 
   useEffect(() => {
+    // Load saved data from AsyncStorage
     const loadSavedData = async () => {
       try {
         const saved = await AsyncStorage.getItem('personal_info');
@@ -250,7 +288,16 @@ const Step2PersonalInfo = ({ navigation }) => {
       }
     };
 
+    const getReferrerId = async () => {
+      const result = await get(`referral/mobile/${mobile}`);
+      console.log('Referral result:', result);
+      if (result.data) {
+        setForm((prev) => ({ ...prev, referrer_id: result.data.referrer_id, referralCode: result.data.referral_code }));
+        setReferralDisabled(true);
+      }
+    };
     loadSavedData();
+    getReferrerId();
   }, []);
 
   useEffect(() => {
@@ -369,7 +416,7 @@ const Step2PersonalInfo = ({ navigation }) => {
 
 
           {/* Email */}
-          {/* <Text style={styles.label}>Email (Optional)</Text>
+          <Text style={styles.label}>Email (Optional)</Text>
           <TextInput
             style={[
               styles.input,
@@ -384,7 +431,7 @@ const Step2PersonalInfo = ({ navigation }) => {
             onFocus={() => setFocusedField('email')}
             onBlur={() => setFocusedField('')}
           />
-          {errors.email && <Text style={styles.errorText}>{errors.email}</Text>} */}
+          {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
 
           {/* Aadhaar */}
           <Text style={styles.label}>Aadhaar Number</Text>
@@ -440,6 +487,26 @@ const Step2PersonalInfo = ({ navigation }) => {
             onBlur={() => setFocusedField('')}
           />
           {errors.emergencyContact && <Text style={styles.errorText}>{errors.emergencyContact}</Text>}
+
+          <Text style={styles.label}>Referral Code (Optional)</Text>
+          <TextInput
+            style={[
+              styles.input,
+              errors.referralCode && styles.inputError,
+              focusedField === 'referralCode' && styles.inputFocused
+            ]}
+            placeholder="Enter Referral Code"
+            value={form.referralCode}
+            onChangeText={(val) => handleChange('referralCode', val.trim())}
+            placeholderTextColor="#999"
+            maxLength={20}
+            autoCapitalize="characters"
+            onFocus={() => setFocusedField('referralCode')}
+            onBlur={() => setFocusedField('')}
+            editable={!referralDisabled}
+          />
+          {errors.referralCode && <Text style={styles.errorText}>{errors.referralCode}</Text>}
+
 
           <TouchableOpacity style={styles.primaryBtn} onPress={handleNext}>
             <Text style={styles.btnText}>Continue</Text>

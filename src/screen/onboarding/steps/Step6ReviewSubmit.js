@@ -82,6 +82,9 @@ const Step6ReviewSubmit = ({ navigation }) => {
     formdata.append("service_areas", workingArea);
     formdata.append("aadhaar_no", (personal.aadhaar || '').replace(/\s+/g, ''));
     formdata.append("pan_no", personal.pan);
+    formdata.append("referral_code", personal.referralCode || '');
+    formdata.append("referrer_id", personal.referrer_id || '');
+    formdata.append("email", personal.email || '');
 
     formdata.append("account_holder_name", bank.accountHolderName);
     formdata.append("bank_name", bank.bankName);

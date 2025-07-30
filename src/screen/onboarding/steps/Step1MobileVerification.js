@@ -1,4 +1,4 @@
-import React, { useContext, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { OnboardingContext } from '../../../context/OnboardingContext';
 import { post } from '../../../utils/api';
 
-const Step1MobileVerification = ({ navigation }) => {
+const Step1MobileVerification = ({ navigation, route }) => {
+  const refCode = route?.params?.ref;
+
+  useEffect(() => {
+    if (refCode) {
+      console.log('Referral Code from link:', refCode);
+      AsyncStorage.setItem('referral_code', refCode); // persist for later use
+    }
+  }, [refCode]);
+
   const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState(['', '', '', '']);
   const [otpSent, setOtpSent] = useState(false);
@@ -91,7 +100,7 @@ const Step1MobileVerification = ({ navigation }) => {
 
       updateData('mobile', mobile);
       // await AsyncStorage.setItem('verified_mobile', mobile);
-      navigation.navigate('Step2PersonalInfo');
+      navigation.navigate('Step2PersonalInfo', { mobile });
     } catch (err) {
       Toast.show({
         type: 'error',

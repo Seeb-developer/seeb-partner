@@ -51,5 +51,23 @@ export const put = (url, data) => api.put(url, data);
 // Generic DELETE
 export const del = (url) => api.delete(url);
 
+export const getPartnerId = async () => {
+    try {
+        const partnerJson = await AsyncStorage.getItem('partner');
+        const partner = partnerJson ? JSON.parse(partnerJson) : null;
+
+        if (partner && partner.id) {
+            // setPartnerId(partner.id);
+            return partner.id;
+        } else {
+            console.warn('❌ Partner not found in storage');
+            return null;
+        }
+    } catch (error) {
+        console.error('🔥 Error getting partner ID:', error);
+        return null;
+    }
+};
+
 // Direct axios instance (if needed)
 export default api;

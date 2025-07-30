@@ -87,7 +87,7 @@ const Login = ({ navigation }) => {
             const fcm_token = await AsyncStorage.getItem('fcmtoken')
             setLoading(true);
 
-            const res = await post('/login', { mobile, otp: otp.join(''), fcm_token });
+            const res = await post('/login', { mobile, otp: otp?.join(''), fcm_token });
             console.log('Login response:', res.data);
 
             // Save token
@@ -221,7 +221,7 @@ const Login = ({ navigation }) => {
                         <TouchableOpacity
                             onPress={() => {
                                 setOtpSent(false);
-                                setOtp('');
+                                setOtp(['', '', '', '']);
                                 setCanResend(false);
                                 setResendTimer(0);
                             }}
@@ -248,7 +248,7 @@ const Login = ({ navigation }) => {
                         <TextInput
                             ref={hiddenInputRef}
                             style={{ position: 'absolute', height: 0, width: 0, opacity: 0 }}
-                            value={otp.join('')}
+                            value={otp?.join('')}
                             onChangeText={(text) => {
                                 const chars = text.slice(0, 4).split('');
                                 const prev = prevOtpRef.current.split('');
